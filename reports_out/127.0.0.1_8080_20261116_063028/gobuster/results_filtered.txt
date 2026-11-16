@@ -1,0 +1,12 @@
+/config 301 314
+/docs 301 312
+/external 301 316
+/favicon.ico 200 1406
+/.hta 403 290
+/.htaccess 403 295
+/.htpasswd 403 295
+/index.php 302 0
+/phpinfo.php 302 0
+/php.ini 200 148
+/robots.txt 200 26
+/server-status 403 299

@@ -1,0 +1,726 @@
+==============================================================================
+  DOXA Web Security Auditor v2.0.1 - Security Assessment Report
+==============================================================================
+Target       : http://127.0.0.1:3000
+Host / IPs   : 127.0.0.1 / 127.0.0.1
+Mode         : standard   Threads: 10   Max req/s: 100
+Started      : 2026-11-16T07:13:04Z
+Finished     : 2026-11-16T07:17:08Z (244 seconds)
+Server       : n/a
+
+1. SCOPE AND AUTHORIZATION
+------------------------------------------------------------------------------
+Authorization: command-line flag (--authorized) at 2026-11-16T07:13:04Z (operator confirmed ownership or written permission)
+Approved hosts: 127.0.0.1
+Approved ports: 3000
+Out-of-scope requests blocked: 0
+TLS verification: enabled
+
+2. EXECUTIVE SUMMARY
+------------------------------------------------------------------------------
+Overall risk: Medium    Findings: 41    CVSS-scored: 0    Duplicates suppressed: 7
+  CRITICAL       0
+  HIGH           0
+  MEDIUM         3
+  LOW            2
+  INFORMATIONAL  36
+Classification:
+  Confirmed vulnerability                  5
+  Potential vulnerability                  1
+  Informational observation                15
+  False positive or unverified result      20
+
+3. OWASP TOP 10 (2021) MAPPING (indicative, not a compliance statement)
+------------------------------------------------------------------------------
+  A02:2021 Cryptographic Failures                         1
+  A03:2021 Injection                                      2
+  A05:2021 Security Misconfiguration                      10
+  Not mapped (informational)                              28
+
+4. TECHNOLOGIES
+------------------------------------------------------------------------------
+  - Country[RESERVED]
+  - HTML5
+  - IP[127.0.0.1]
+  - Script[module]
+  - Service: http
+  - Service: ppp?
+  - Title[OWASP Juice Shop]
+  - UncommonHeaders[access-control-allow-origin,x-content-type-options,feature-policy,x-recruiting]
+  - X-Frame-Options[SAMEORIGIN]
+
+5. OPEN PORTS AND SERVICES
+------------------------------------------------------------------------------
+  3000/tcp ppp? 
+  8080/tcp http Apache httpd 2.4.25 ((Debian))
+
+6. FINDINGS
+------------------------------------------------------------------------------
+
+[MEDIUM] DOXA-001  Nikto: JAMon - Java Application Monitor Admin interface identified. Versions 2.7 and earlier cont
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/JAMonAdmin.jsp
+  OWASP          : A03:2021 Injection
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : JAMon - Java Application Monitor Admin interface identified. Versions 2.7 and earlier contain XSS vulnerabilities.
+  Impact         : If confirmed, attackers could run script in victims browsers or manipulate backend queries. Manual verification is required.
+  Evidence       :
+      Nikto id 007303, method GET: JAMon - Java Application Monitor Admin interface identified. Versions 2.7 and earlier contain XSS vulnerabilities.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[MEDIUM] DOXA-002  Nuclei: Prometheus Metrics - Detect
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:3000/metrics
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:17:06Z
+  Description    : Prometheus metrics page was detected.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Template: prometheus-metrics | Matched at: http://127.0.0.1:3000/metrics
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[MEDIUM] DOXA-003  Site served only over unencrypted HTTP
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:3000/
+  OWASP          : A02:2021 Cryptographic Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:13:30Z
+  Description    : No HTTPS service was found; all traffic, including any credentials, is sent in cleartext.
+  Impact         : Traffic may be intercepted or modified in transit, exposing credentials and user data.
+  Evidence       :
+      GET http://127.0.0.1:3000/ -> HTTP 200
+  Remediation    : Deploy a valid TLS certificate, enable HTTPS and redirect HTTP to HTTPS.
+  False positives: Local lab targets commonly use plain HTTP.
+
+[LOW] DOXA-004  CORS allows any origin (wildcard)
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:3000
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:13:30Z
+  Description    : Access-Control-Allow-Origin: * lets any website read this response (without credentials).
+  Impact         : A malicious website may be able to read responses from this application in a victim browser.
+  Evidence       :
+      ACAO: *
+  Remediation    : Restrict to trusted origins if the content is not intentionally public.
+  False positives: Wildcard is normal for public APIs and static assets.
+
+[LOW] DOXA-005  Missing Content-Security-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:3000/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:13:30Z
+  Description    : No CSP is set, so the browser has no policy limiting where scripts and other resources may load from, reducing defence against XSS.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Access-Control-Allow-Origin: *
+      X-Content-Type-Options: nosniff
+      X-Frame-Options: SAMEORIGIN
+      Feature-Policy: payment 'self'
+      X-Recruiting: /#/jobs
+      Accept-Ranges: bytes
+      Cache-Control: public, max-age=0
+      Last-Modified: Sun, 08 Nov 2026 19:11:10 GMT
+      ETag: W/"2700-1a1bc9258b0"
+      Content-Type: text/html; charset=UTF-8
+      Content-Length: 9984
+      Vary: Accept-Encoding
+      Date: Mon, 16 Nov 2026 07:13:04 GMT
+      Connection: keep-alive
+      Keep-Alive: timeout=5
+  Remediation    : Define a restrictive Content-Security-Policy (avoid unsafe-inline/unsafe-eval).
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[INFORMATIONAL] DOXA-006  Detected web technologies
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:3000
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : whatweb / whatweb   at 2026-11-16T07:13:30Z
+  Description    : WhatWeb fingerprinted the following technologies (aggression level 1).
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Country[RESERVED]
+      HTML5
+      IP[127.0.0.1]
+      Script[module]
+      Title[OWASP Juice Shop]
+      UncommonHeaders[access-control-allow-origin,x-content-type-options,feature-policy,x-recruiting]
+      X-Frame-Options[SAMEORIGIN]
+  Remediation    : Reduce unnecessary technology disclosure (version banners, generator tags) and keep all components patched.
+  False positives: Fingerprinting is heuristic; versions may be inaccurate or masked.
+
+[INFORMATIONAL] DOXA-007  Missing Permissions-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:3000/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:13:30Z
+  Description    : Browser features (camera, geolocation, etc.) are not explicitly restricted.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Access-Control-Allow-Origin: *
+      X-Content-Type-Options: nosniff
+      X-Frame-Options: SAMEORIGIN
+      Feature-Policy: payment 'self'
+      X-Recruiting: /#/jobs
+      Accept-Ranges: bytes
+      Cache-Control: public, max-age=0
+      Last-Modified: Sun, 08 Nov 2026 19:11:10 GMT
+      ETag: W/"2700-1a1bc9258b0"
+      Content-Type: text/html; charset=UTF-8
+      Content-Length: 9984
+      Vary: Accept-Encoding
+      Date: Mon, 16 Nov 2026 07:13:04 GMT
+      Connection: keep-alive
+      Keep-Alive: timeout=5
+  Remediation    : Send a Permissions-Policy header disabling unused features.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[INFORMATIONAL] DOXA-008  Missing Referrer-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:3000/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:13:30Z
+  Description    : Full URLs may leak to other sites via the Referer header.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Access-Control-Allow-Origin: *
+      X-Content-Type-Options: nosniff
+      X-Frame-Options: SAMEORIGIN
+      Feature-Policy: payment 'self'
+      X-Recruiting: /#/jobs
+      Accept-Ranges: bytes
+      Cache-Control: public, max-age=0
+      Last-Modified: Sun, 08 Nov 2026 19:11:10 GMT
+      ETag: W/"2700-1a1bc9258b0"
+      Content-Type: text/html; charset=UTF-8
+      Content-Length: 9984
+      Vary: Accept-Encoding
+      Date: Mon, 16 Nov 2026 07:13:04 GMT
+      Connection: keep-alive
+      Keep-Alive: timeout=5
+  Remediation    : Send Referrer-Policy: strict-origin-when-cross-origin or stricter.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[INFORMATIONAL] DOXA-009  Nikto: /robots.txt: Entry '/ftp/' is returned a non-forbidden or redirect HTTP code (200).
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/ftp/
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : /robots.txt: Entry '/ftp/' is returned a non-forbidden or redirect HTTP code (200).
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 999997, method GET: /robots.txt: Entry '/ftp/' is returned a non-forbidden or redirect HTTP code (200).
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-010  Nikto: A user's home directory may be set to the web root, the shell history was retrieved. This 
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:3000/.bash_history
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : A user's home directory may be set to the web root, the shell history was retrieved. This should not be accessible via the web.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      Nikto id 002743, method GET: A user's home directory may be set to the web root, the shell history was retrieved. This should not be accessible via the web.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-011  Nikto: A user's home directory may be set to the web root, the shell history was retrieved. This 
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:3000/.sh_history
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : A user's home directory may be set to the web root, the shell history was retrieved. This should not be accessible via the web.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      Nikto id 002756, method GET: A user's home directory may be set to the web root, the shell history was retrieved. This should not be accessible via the web.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-012  Nikto: Contains authorization information.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/.htpasswd
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : Contains authorization information.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 002739, method GET: Contains authorization information.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-013  Nikto: Database SQL?.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/.mysql_history
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : Database SQL?.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 002748, method GET: Database SQL?.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-014  Nikto: Retrieved access-control-allow-origin header: \*.
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:3000/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : Retrieved access-control-allow-origin header: \*.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      Nikto id 000287, method GET: Retrieved access-control-allow-origin header: \*.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-015  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/.psql_history
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 001535, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-016  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/.sqlite_history
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007129, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-017  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/PasswordsData.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007210, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-018  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/accounts.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007215, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-019  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/conn.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007213, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-020  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/conndb.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007212, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-021  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/connection.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007208, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-022  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/connections.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:51Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007207, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-023  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/ftp/
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:52Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 001675, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-024  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/login.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:52Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007204, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-025  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/master.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:52Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007205, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-026  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/masters.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:52Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007206, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-027  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/public/
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:52Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 001811, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-028  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/userdata.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:52Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007203, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-029  Nikto: This might be interesting.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/users.json
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:52Z
+  Description    : This might be interesting.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 007211, method GET: This might be interesting.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-030  Nikto: Uncommon header(s) 'x-recruiting' found, with contents: /#/jobs.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:52Z
+  Description    : Uncommon header(s) 'x-recruiting' found, with contents: /#/jobs.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 999100, method GET: Uncommon header(s) 'x-recruiting' found, with contents: /#/jobs.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-031  Nikto: contains 1 entry which should be manually viewed.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:3000/robots.txt
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:14:52Z
+  Description    : contains 1 entry which should be manually viewed.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 999996, method GET: contains 1 entry which should be manually viewed.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-032  Nuclei: Add DOM EventListener - Detection
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:3000
+  OWASP          : A03:2021 Injection
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:17:06Z
+  Description    : Identifies the use of JavaScript addEventListener calls in the DOM. 
+  Impact         : If confirmed, attackers could run script in victims browsers or manipulate backend queries. Manual verification is required.
+  Evidence       :
+      Template: addeventlistener-detect | Matched at: http://127.0.0.1:3000
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-033  Nuclei: FingerprintHub Technology Fingerprint
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:3000
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:17:06Z
+  Description    : FingerprintHub Technology Fingerprint tests run in nuclei.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Template: fingerprinthub-web-fingerprints | Matched at: http://127.0.0.1:3000 | Matcher: qm-system
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-034  Nuclei: HTTP Missing Security Headers
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:3000
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:17:06Z
+  Description    : This template searches for missing HTTP security headers. The impact of these missing headers can vary. 
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Template: http-missing-security-headers | Matched at: http://127.0.0.1:3000 | Matcher: x-permitted-cross-domain-policies
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-035  Nuclei: OWASP Juice Shop
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:3000
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:17:06Z
+  Description    : Detected by Nuclei template.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Template: owasp-juice-shop-detect | Matched at: http://127.0.0.1:3000
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-036  Nuclei: Public Swagger API - Detect
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:3000/api-docs/swagger.json
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:17:06Z
+  Description    : Public Swagger API was detected. 
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Template: swagger-api | Matched at: http://127.0.0.1:3000/api-docs/swagger.json
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-037  Nuclei: Wappalyzer Technology Detection
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:3000
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:17:06Z
+  Description    : Detected by Nuclei template.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Template: tech-detect | Matched at: http://127.0.0.1:3000 | Matcher: google-font-api
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-038  Open TCP ports and services
+  Classification : Informational observation   Confidence: High
+  Affected URL   : tcp://127.0.0.1
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nmap / nmap   at 2026-11-16T07:13:26Z
+  Description    : Nmap identified 2 open port(s) among the scanned set.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      3000/tcp ppp? 
+      8080/tcp http Apache httpd 2.4.25 ((Debian))
+  Remediation    : Close or firewall services that do not need to be reachable; keep only required ports exposed.
+  False positives: Reachability depends on the scanning vantage point and any rate-limiting or IDS.
+
+[INFORMATIONAL] DOXA-039  Server returns HTTP 200 for non-existent pages (soft-404)
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:3000
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-16T07:13:04Z
+  Description    : Requests for random non-existent paths return HTTP 200, which inflates directory-brute-force and scanner false positives.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      GET /doxa-random-nonexistent -> HTTP 200 (9984 bytes)
+  Remediation    : No action required; consider returning proper 404 status codes.
+  False positives: DOXA filters results matching this baseline, but manual verification of discovered paths is still advised.
+
+[INFORMATIONAL] DOXA-040  Web service identified
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:3000
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-16T07:13:04Z
+  Description    : HTTP(S) service reachable. Server: unknown. HTTP available: 1, HTTPS available: 0.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Title: OWASP Juice Shop; Resolved IPs: 127.0.0.1
+  Remediation    : No action required.
+
+[INFORMATIONAL] DOXA-041  robots.txt is publicly accessible
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:3000/robots.txt
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-16T07:13:04Z
+  Description    : robots.txt exists and lists crawler directives.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Disallow: /ftp
+  Remediation    : No action required.
+
+7. MODULE AND TOOL EXECUTION
+------------------------------------------------------------------------------
+  recon      OK              0s  HTTP=1 HTTPS=0 server=unknown
+  nmap       OK             22s  2 open port(s)
+  whatweb    OK              4s  7 technologies
+  http       OK              1s  5 findings
+  tls        SKIPPED         0s  no HTTPS endpoint detected
+  gobuster   FAILED          1s  gobuster exit 1, no results; see logs/gobuster.log
+  nikto      OK             80s  24 nikto item(s)
+  nuclei     OK            134s  14 nuclei finding(s)
+  params     SKIPPED         0s  not part of the 'standard' profile
+  evidence   OK              2s  screenshot captured with chromium
+
+  $ nmap -Pn -sV --script http-title,http-server-header,http-methods,http-headers,http-robots.txt,ssl-cert,banner --max-retries 2 --host-timeout 900s -oA /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/nmap/nmap -p 21,22,23,25,53,80,110,143,443,445,465,587,993,995,1433,2375,3000,3306,3389,5000,5432,5900,6379,8000,8008,8080,8081,8088,8443,8888,9000,9200,27017 -T3 --version-intensity 2 --max-rate 100 127.0.0.1   [exit 0, 22s]
+  $ whatweb -a 1 --max-redirects=0 --color=never --user-agent DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --log-json=/home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/logs/whatweb.json http://127.0.0.1:3000   [exit 0, 4s]
+  $ gobuster dir -u http://127.0.0.1:3000 -w /usr/share/wordlists/dirb/common.txt -t 10 -s 200,204,301,302,307,401,403 -b  -q --no-error -a DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --timeout 10s -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/gobuster/gobuster_dir.txt --delay 100ms   [exit 1, 0s]
+  $ gobuster dir -u http://127.0.0.1:3000 -w /usr/share/wordlists/dirb/common.txt -t 10 -s 200,204,301,302,307,401,403 -b  -q --no-error -a DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --timeout 10s -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/gobuster/gobuster_dir.txt --delay 100ms --wildcard   [exit 1, 1s]
+  $ nikto -h http://127.0.0.1:3000 -ask no -nointeractive -maxtime 600s -timeout 10 -Tuning 1234b -Format json -output /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/nikto/nikto.json   [exit 0, 79s]
+  $ nuclei -u http://127.0.0.1:3000 -silent -nc -duc -timeout 10 -retries 1 -rl 100 -c 10 -jsonl -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/nuclei/nuclei.jsonl -etags dos,intrusive,fuzz,dast,bruteforce,brute-force,destructive,default-login -ni -tags tech,exposure,misconfig,cve,cms,xss,sqli,lfi,traversal,ssrf,takeover,wordpress,joomla,drupal   [exit 0, 134s]
+  $ chromium --headless --no-sandbox --disable-gpu --ignore-certificate-errors --hide-scrollbars --window-size=1366,768 --screenshot=/home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/screenshots/homepage.png http://127.0.0.1:3000/   [exit 0, 2s]
+
+8. LIMITATIONS AND UNTESTED AREAS
+------------------------------------------------------------------------------
+  - Point-in-time, unauthenticated black-box assessment; authenticated areas, session handling after login and business logic were not tested.
+  - Automated scanners produce false positives and false negatives; every finding classified as Potential or Unverified requires manual validation.
+  - No exploitation, credential extraction, data modification, file upload, brute-force or denial-of-service testing was performed.
+  - Only approved hosts and ports were contacted; redirects to unapproved destinations were not followed.
+  - Wordlist-based discovery cannot prove absence of content; JavaScript-rendered routes and authenticated API endpoints were not enumerated.
+  - OWASP Top 10 mapping is indicative. It does not establish compliance or non-compliance with any standard.
+  - CVSS scores are provided only where the evidence supports a defensible vector; all other findings are intentionally not scored.
+  - Nikto manages its own TLS handling; DOXA cannot enforce certificate validation inside Nikto, Nuclei or WhatWeb.
+  - Nuclei out-of-band (OAST) templates were disabled; blind SSRF/injection checks that need a callback server were not run (use --oast to enable).
+  - Module tls skipped: no HTTPS endpoint detected
+  - Module gobuster failed: gobuster exit 1, no results; see logs/gobuster.log
+  - Module params skipped: not part of the 'standard' profile
+
+9. EVIDENCE INTEGRITY (SHA-256)
+------------------------------------------------------------------------------
+  Artefact manifest: logs/evidence.sha256 (27 files); report files: logs/reports.sha256
+
+==============================================================================
+Confidential: contains security-sensitive information. Secrets are redacted.
+==============================================================================

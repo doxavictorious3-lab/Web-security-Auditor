@@ -1,0 +1,10 @@
+recon	OK	1	HTTP=1 HTTPS=0 server=Apache/2.4.25 (Debian)
+nmap	OK	22	2 open port(s)
+whatweb	OK	3	6 technologies
+http	OK	4	8 findings
+tls	SKIPPED	0	no HTTPS endpoint detected
+gobuster	OK	155	12 path(s)
+nikto	OK	8	7 nikto item(s)
+nuclei	FAILED	0	nuclei exit 2, no results (templates installed? run: nuclei -update-templates); see logs/nuclei.log
+params	SKIPPED	0	not part of the 'standard' profile
+evidence	OK	1	screenshot captured with chromium

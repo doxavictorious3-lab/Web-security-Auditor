@@ -1,0 +1,47 @@
+DOXA Web Security Auditor - Reconnaissance
+Generated : 2026-11-16 07:10:38 UTC
+Target    : http://127.0.0.1:8080
+Host      : 127.0.0.1
+Resolved  : 127.0.0.1
+
+== DNS records ==
+(target is an IP address; forward DNS skipped)
+-- PTR
+;; communications error to 41.203.208.18#53: timed out
+;; communications error to 41.203.208.19#53: timed out
+;; no servers could be reached
+
+== HTTP/HTTPS service detection ==
+http://127.0.0.1:8080              HTTP 302
+  [1] http://127.0.0.1:8080/ -> HTTP 302
+  [2] http://127.0.0.1:8080/login.php -> HTTP 200
+
+== Root redirect chain (scope-checked hops) ==
+  [1] http://127.0.0.1:8080/ -> HTTP 302
+  [2] http://127.0.0.1:8080/login.php -> HTTP 200
+
+== Analysed page: http://127.0.0.1:8080/login.php (HTTP 200) ==
+Server header : Apache/2.4.25 (Debian)
+X-Powered-By  : 
+Content-Type  : text/html;charset=utf-8
+Page title    : Login :: Damn Vulnerable Web Application (DVWA) v1.10 *Development*
+
+-- Response headers (cookie values redacted)
+HTTP/1.1 200 OK
+Date: Mon, 16 Nov 2026 07:10:44 GMT
+Server: Apache/2.4.25 (Debian)
+Set-Cookie: PHPSESSID=<redacted>; path=/
+Expires: Tue, 23 Jun 2009 12:00:00 GMT
+Cache-Control: no-cache, must-revalidate
+Pragma: no-cache
+Set-Cookie: PHPSESSID=<redacted>; path=/
+Set-Cookie: security=<redacted>
+Vary: Accept-Encoding
+Content-Length: 1523
+Content-Type: text/html;charset=utf-8
+
+Soft-404 baseline: HTTP 404, 301 bytes
+
+== robots.txt (accessible) ==
+User-agent: *
+Disallow: /sitemap.xml: not found (HTTP 404)

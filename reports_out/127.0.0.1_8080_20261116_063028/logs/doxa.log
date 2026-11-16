@@ -1,0 +1,38 @@
+[2026-11-16 06:30:28] [INFO] DOXA Web Security Auditor 2.0.0 started; target=http://127.0.0.1:8080 mode=standard threads=10 rate=30 tls_verify=1
+[2026-11-16 06:30:28] [INFO] Target     : [96mhttp://127.0.0.1:8080[0m  (127.0.0.1)
+[2026-11-16 06:30:28] [INFO] Scope      : hosts=[127.0.0.1] ports=[8080]
+[2026-11-16 06:30:28] [INFO] Profile    : standard - Standard security assessment: passive set plus nmap web ports, exposed-file probes, gobuster, nikto and nuclei with safe settings.
+[2026-11-16 06:30:28] [INFO] Modules    : recon nmap whatweb http tls gobuster nikto nuclei evidence
+[2026-11-16 06:30:28] [INFO] Limits     : threads=10 rate=30/s tool-timeout=900s tls-verify=on
+[2026-11-16 06:30:28] [INFO] Output     : /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_063028
+[2026-11-16 06:30:29] [FINDING] [INFORMATIONAL] robots.txt is publicly accessible (http://127.0.0.1:8080/robots.txt)
+[2026-11-16 06:30:29] [FINDING] [INFORMATIONAL] Web service identified (http://127.0.0.1:8080)
+[2026-11-16 06:30:29] [CMD] nmap: nmap -Pn -sV --script http-title,http-server-header,http-methods,http-headers,http-robots.txt,ssl-cert,banner --max-retries 2 --host-timeout 900s -oA /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_063028/nmap/nmap -p 21,22,23,25,53,80,110,143,443,445,465,587,993,995,1433,2375,3000,3306,3389,5000,5432,5900,6379,8000,8008,8080,8081,8088,8443,8888,9000,9200,27017 -T3 --version-intensity 2 --max-rate 30 127.0.0.1
+[2026-11-16 06:30:51] [FINDING] [INFORMATIONAL] Open TCP ports and services (tcp://127.0.0.1)
+[2026-11-16 06:30:51] [CMD] whatweb: whatweb -a 1 --max-redirects=0 --color=never --user-agent DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --log-json=/home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_063028/logs/whatweb.json http://127.0.0.1:8080
+[2026-11-16 06:30:54] [FINDING] [INFORMATIONAL] Detected web technologies (http://127.0.0.1:8080)
+[2026-11-16 06:30:55] [FINDING] [LOW] Missing Content-Security-Policy header (http://127.0.0.1:8080)
+[2026-11-16 06:30:55] [FINDING] [LOW] Missing X-Content-Type-Options header (http://127.0.0.1:8080)
+[2026-11-16 06:30:55] [FINDING] [LOW] Missing clickjacking protection (X-Frame-Options / frame-ancestors) (http://127.0.0.1:8080)
+[2026-11-16 06:30:55] [FINDING] [INFORMATIONAL] Missing Referrer-Policy header (http://127.0.0.1:8080)
+[2026-11-16 06:30:55] [FINDING] [INFORMATIONAL] Missing Permissions-Policy header (http://127.0.0.1:8080)
+[2026-11-16 06:30:55] [FINDING] [LOW] Version information disclosed in server header (http://127.0.0.1:8080)
+[2026-11-16 06:30:55] [FINDING] [MEDIUM] Cookie without HttpOnly attribute (http://127.0.0.1:8080)
+[2026-11-16 06:30:55] [FINDING] [LOW] Cookie without SameSite attribute (http://127.0.0.1:8080)
+[2026-11-16 06:30:58] [CMD] gobuster: gobuster dir -u http://127.0.0.1:8080 -w /usr/share/wordlists/dirb/common.txt -t 10 -s 200,204,301,302,307,401,403 -b  -q --no-error -a DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --timeout 10s -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_063028/gobuster/gobuster_dir.txt --delay 333ms
+[2026-11-16 06:33:33] [FINDING] [INFORMATIONAL] Discovered accessible paths (12) (http://127.0.0.1:8080)
+[2026-11-16 06:33:33] [FINDING] [MEDIUM] Directory listing enabled (http://127.0.0.1:8080/config/)
+[2026-11-16 06:33:33] [FINDING] [MEDIUM] Directory listing enabled (http://127.0.0.1:8080/docs/)
+[2026-11-16 06:33:33] [FINDING] [MEDIUM] Directory listing enabled (http://127.0.0.1:8080/external/)
+[2026-11-16 06:33:33] [CMD] nikto: nikto -h http://127.0.0.1:8080 -ask no -nointeractive -maxtime 600s -timeout 10 -Tuning 1234b -Format json -output /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_063028/nikto/nikto.json
+[2026-11-16 06:33:39] [FINDING] [MEDIUM] Nikto: .gitignore file found. It is possible to grasp the directory structure. (http://127.0.0.1:8080/.gitignore)
+[2026-11-16 06:33:40] [FINDING] [INFORMATIONAL] Nikto: Admin login page/section found. (http://127.0.0.1:8080/login.php)
+[2026-11-16 06:33:40] [FINDING] [INFORMATIONAL] Nikto: Apache default file found. (http://127.0.0.1:8080/icons/README)
+[2026-11-16 06:33:40] [FINDING] [MEDIUM] Nikto: Apache/2.4.25 appears to be outdated (current is at least 2.4.68). (http://127.0.0.1:8080/)
+[2026-11-16 06:33:40] [FINDING] [INFORMATIONAL] Nikto: Configuration information may be available remotely. (http://127.0.0.1:8080/config/)
+[2026-11-16 06:33:40] [FINDING] [MEDIUM] Nikto: Directory indexing found. (http://127.0.0.1:8080/config/)
+[2026-11-16 06:33:40] [FINDING] [MEDIUM] Nikto: Directory indexing found. (http://127.0.0.1:8080/docs/)
+[2026-11-16 06:33:41] [CMD] nuclei: nuclei -u http://127.0.0.1:8080 -silent -nc -duc -timeout 10 -retries 1 -rl 30 -c 10 -json -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_063028/nuclei/nuclei.jsonl -etags dos,intrusive,fuzz,dast,bruteforce,brute-force,destructive,default-login -ni -tags tech,exposure,misconfig,cve,cms,xss,sqli,lfi,traversal,ssrf,takeover,wordpress,joomla,drupal
+[2026-11-16 06:33:41] [WARN] module nuclei: FAILED - nuclei exit 2, no results (templates installed? run: nuclei -update-templates); see logs/nuclei.log
+[2026-11-16 06:33:41] [CMD] chromium: chromium --headless --no-sandbox --disable-gpu --ignore-certificate-errors --hide-scrollbars --window-size=1366,768 --screenshot=/home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_063028/screenshots/homepage.png http://127.0.0.1:8080/
+[2026-11-16 06:33:48] [WARN] 1 module(s) failed, timed out or were interrupted - see the report limitations section.

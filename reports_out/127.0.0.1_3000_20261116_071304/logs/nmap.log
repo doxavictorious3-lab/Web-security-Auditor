@@ -1,0 +1,31 @@
+Starting Nmap 7.991 ( https://nmap.org ) at 2026-11-16 07:13 +0000
+Nmap scan report for localhost (127.0.0.1)
+Host is up (0.00011s latency).
+Not shown: 31 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+3000/tcp open  ppp?
+8080/tcp open  http    Apache httpd 2.4.25 ((Debian))
+| http-headers: 
+|   Date: Mon, 16 Nov 2026 07:13:16 GMT
+|   Server: Apache/2.4.25 (Debian)
+|   Set-Cookie: PHPSESSID=pa06ffo22etpqcgoinklgbum23; path=/
+|   Expires: Thu, 19 Nov 1981 08:52:00 GMT
+|   Cache-Control: no-store, no-cache, must-revalidate
+|   Pragma: no-cache
+|   Set-Cookie: PHPSESSID=pa06ffo22etpqcgoinklgbum23; path=/
+|   Set-Cookie: security=low
+|   Location: login.php
+|   Content-Length: 0
+|   Connection: close
+|   Content-Type: text/html; charset=UTF-8
+|   
+|_  (Request type: GET)
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Did not follow redirect to login.php
+| http-robots.txt: 1 disallowed entry 
+|_/
+|_http-server-header: Apache/2.4.25 (Debian)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 21.68 seconds

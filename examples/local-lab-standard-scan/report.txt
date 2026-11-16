@@ -1,0 +1,393 @@
+==============================================================================
+  DOXA Web Security Auditor v2.0.0 - Security Assessment Report
+==============================================================================
+Target       : http://127.0.0.1:18082
+Host / IPs   : 127.0.0.1 / 127.0.0.1
+Mode         : standard   Threads: 10   Max req/s: 100
+Started      : 2026-11-15T22:32:42Z
+Finished     : 2026-11-15T22:32:44Z (2 seconds)
+Server       : LabServer/1.2.3 
+
+1. SCOPE AND AUTHORIZATION
+------------------------------------------------------------------------------
+Authorization: command-line flag (--authorized) at 2026-11-15T22:32:42Z (operator confirmed ownership or written permission)
+Approved hosts: 127.0.0.1
+Approved ports: 18082
+Out-of-scope requests blocked: 0
+TLS verification: enabled
+
+2. EXECUTIVE SUMMARY
+------------------------------------------------------------------------------
+Overall risk: High    Findings: 20    CVSS-scored: 4    Duplicates suppressed: 0
+  CRITICAL       0
+  HIGH           3
+  MEDIUM         4
+  LOW            9
+  INFORMATIONAL  4
+Classification:
+  Confirmed vulnerability                  15
+  Potential vulnerability                  3
+  Informational observation                2
+  False positive or unverified result      0
+
+3. OWASP TOP 10 (2021) MAPPING (indicative, not a compliance statement)
+------------------------------------------------------------------------------
+  A01:2021 Broken Access Control                          1
+  A02:2021 Cryptographic Failures                         1
+  A05:2021 Security Misconfiguration                      14
+  A07:2021 Identification and Authentication Failures     2
+  Not mapped (informational)                              2
+
+4. TECHNOLOGIES
+------------------------------------------------------------------------------
+  - Generator: LabCMS 1.0
+  - Server: LabServer/1.2.3 
+  - X-Powered-By: PHP/5.6.40
+
+5. OPEN PORTS AND SERVICES
+------------------------------------------------------------------------------
+  (no port scan data)
+
+6. FINDINGS
+------------------------------------------------------------------------------
+
+[HIGH] DOXA-001  CORS reflects arbitrary origin with credentials
+  Classification : Potential vulnerability   Confidence: Medium
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A01:2021 Broken Access Control
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : The server reflects an untrusted Origin and allows credentials, which can let malicious sites read authenticated responses.
+  Impact         : A malicious website may be able to read responses from this application in a victim browser.
+  Evidence       :
+      Origin: https://doxa-cors-test.invalid -> Access-Control-Allow-Origin: https://doxa-cors-test.invalid; Access-Control-Allow-Credentials: true  Remediation    : Validate Origin against a strict allow-list; never reflect arbitrary origins with credentials.
+  False positives: Impact depends on whether the endpoint returns sensitive, authenticated data.
+
+[HIGH] DOXA-002  Exposed Git repository metadata
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082/.git/HEAD
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Repository metadata was confirmed readable without authentication; full source retrieval was not attempted, so confidentiality impact is scored Low.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : The .git directory is downloadable, allowing source code and history to be reconstructed.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      GET /.git/HEAD -> HTTP 200; content signature matched. ref: refs/heads/main  Remediation    : Remove the file from the web root, deny access in the web-server configuration and rotate any credentials it contained.
+  False positives: Signature matched file content. Confirm manually that this is not an intentional public file or a honeypot.
+
+[HIGH] DOXA-003  Exposed environment file (.env)
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082/.env
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 7.5 (High)  AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+  CVSS note      : Readable configuration file whose variable names indicate credentials or keys (values redacted and not used).
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : The .env file is publicly readable and typically holds credentials and API keys.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      GET /.env -> HTTP 200; content signature matched. DB_PASSWORD=<redacted>
+      APP_KEY=<redacted>
+      DEBUG=<redacted>  Remediation    : Remove the file from the web root, deny access in the web-server configuration and rotate any credentials it contained.
+  False positives: Signature matched file content. Confirm manually that this is not an intentional public file or a honeypot.
+
+[MEDIUM] DOXA-004  Cookie without HttpOnly attribute
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : Cookies without HttpOnly can be read by JavaScript and stolen through XSS.
+  Impact         : Session cookies may be exposed to script access or sent over insecure channels, increasing the risk of session theft.
+  Evidence       :
+      Cookie names (values not stored): sid   Remediation    : Set the HttpOnly attribute on cookies that JavaScript does not need.
+  False positives: Cookies used only for client-side preferences may legitimately omit HttpOnly.
+
+[MEDIUM] DOXA-005  Directory listing enabled
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082/backup/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Directory index confirmed readable without authentication; sensitivity of the listed files was not assessed, so confidentiality impact is scored Low.
+  Module / tool  : http / curl   at 2026-11-15T22:32:44Z
+  Description    : The web server lists directory contents, exposing file names and potentially sensitive files.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      GET /backup/ -> HTTP 200; auto-index page detected: Index of /backup/  Remediation    : Disable directory indexing (Options -Indexes, autoindex off) and review exposed files.
+  False positives: Intentional public file mirrors may be listed on purpose.
+
+[MEDIUM] DOXA-006  Site served only over unencrypted HTTP
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082/
+  OWASP          : A02:2021 Cryptographic Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : No HTTPS service was found; all traffic, including any credentials, is sent in cleartext.
+  Impact         : Traffic may be intercepted or modified in transit, exposing credentials and user data.
+  Evidence       :
+      GET http://127.0.0.1:18082/ -> HTTP 200  Remediation    : Deploy a valid TLS certificate, enable HTTPS and redirect HTTP to HTTPS.
+  False positives: Local lab targets commonly use plain HTTP.
+
+[MEDIUM] DOXA-007  phpinfo() page exposed
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082/phpinfo.php
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Configuration or runtime information confirmed readable without authentication.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : phpinfo output discloses configuration, paths and environment details.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      GET /phpinfo.php -> HTTP 200; content signature matched. <html><title>phpinfo()</title><body>PHP Version 5.6.40</body></html>  Remediation    : Remove the file from the web root, deny access in the web-server configuration and rotate any credentials it contained.
+  False positives: Signature matched file content. Confirm manually that this is not an intentional public file or a honeypot.
+
+[LOW] DOXA-008  Cookie without SameSite attribute
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : Without SameSite, cookies are sent on cross-site requests in older browsers, aiding CSRF.
+  Impact         : Session cookies may be exposed to script access or sent over insecure channels, increasing the risk of session theft.
+  Evidence       :
+      Cookie names (values not stored): sid   Remediation    : Set SameSite=Lax or Strict (None only with Secure when required).
+  False positives: Modern browsers default to Lax, reducing the practical risk.
+
+[LOW] DOXA-009  HTTP TRACE method enabled
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : TRACE echoes requests back, which can aid cross-site tracing attacks.
+  Impact         : Weak configuration may expose unnecessary functionality or information.
+  Evidence       :
+      TRACE / -> HTTP 200 and the probe header was echoed  Remediation    : Disable TRACE (e.g. TraceEnable off).
+
+[LOW] DOXA-010  Missing Content-Security-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : No CSP is set, so the browser has no policy limiting where scripts and other resources may load from, reducing defence against XSS.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Server: LabServer/1.2.3 
+      Date: Sun, 15 Nov 2026 22:32:42 GMT
+      Content-Type: text/html
+      Content-Length: 196
+      Connection: close
+      Set-Cookie: sid=<redacted>; Path=/
+      Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+      X-Powered-By: PHP/5.6.40  Remediation    : Define a restrictive Content-Security-Policy (avoid unsafe-inline/unsafe-eval).
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[LOW] DOXA-011  Missing X-Content-Type-Options header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : Without nosniff, browsers may MIME-sniff responses, enabling content-type confusion attacks.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Server: LabServer/1.2.3 
+      Date: Sun, 15 Nov 2026 22:32:42 GMT
+      Content-Type: text/html
+      Content-Length: 196
+      Connection: close
+      Set-Cookie: sid=<redacted>; Path=/
+      Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+      X-Powered-By: PHP/5.6.40  Remediation    : Send X-Content-Type-Options: nosniff on all responses.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[LOW] DOXA-012  Missing clickjacking protection (X-Frame-Options / frame-ancestors)
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : The page can be embedded in third-party frames, enabling clickjacking.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Server: LabServer/1.2.3 
+      Date: Sun, 15 Nov 2026 22:32:42 GMT
+      Content-Type: text/html
+      Content-Length: 196
+      Connection: close
+      Set-Cookie: sid=<redacted>; Path=/
+      Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+      X-Powered-By: PHP/5.6.40  Remediation    : Send X-Frame-Options: DENY (or SAMEORIGIN) or a CSP frame-ancestors directive.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[LOW] DOXA-013  Potentially dangerous HTTP methods advertised
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : The Allow header lists state-changing methods. DOXA did not test them (would modify data).
+  Impact         : Weak configuration may expose unnecessary functionality or information.
+  Evidence       :
+      Allow: GET, HEAD, OPTIONS, PUT, DELETE  Remediation    : Disable unused HTTP methods and require authentication for write methods.
+  False positives: Advertised methods may still require authentication.
+
+[LOW] DOXA-014  Version information disclosed in server header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : The server header discloses software and version details that help attackers select exploits.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      server: LabServer/1.2.3   Remediation    : Remove or genericise version banners (e.g. ServerTokens Prod, server_tokens off, expose_php=Off).
+  False positives: Disclosure alone is not exploitable; it only reduces attacker effort.
+
+[LOW] DOXA-015  Version information disclosed in x-powered-by header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : The x-powered-by header discloses software and version details that help attackers select exploits.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      x-powered-by: PHP/5.6.40  Remediation    : Remove or genericise version banners (e.g. ServerTokens Prod, server_tokens off, expose_php=Off).
+  False positives: Disclosure alone is not exploitable; it only reduces attacker effort.
+
+[LOW] DOXA-016  robots.txt references sensitive-looking paths
+  Classification : Potential vulnerability   Confidence: Medium
+  Affected URL   : http://127.0.0.1:18082/robots.txt
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-15T22:32:43Z
+  Description    : robots.txt is public and lists paths that suggest administrative, backup or internal content, which helps attackers prioritise targets.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      Disallow: /admin/
+      Disallow: /backup/  Remediation    : Do not rely on robots.txt to hide content; protect sensitive paths with authentication and remove revealing entries.
+  False positives: Paths may be harmless or decoys. Verify whether the listed resources are actually reachable.
+
+[INFORMATIONAL] DOXA-017  Missing Permissions-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : Browser features (camera, geolocation, etc.) are not explicitly restricted.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Server: LabServer/1.2.3 
+      Date: Sun, 15 Nov 2026 22:32:42 GMT
+      Content-Type: text/html
+      Content-Length: 196
+      Connection: close
+      Set-Cookie: sid=<redacted>; Path=/
+      Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+      X-Powered-By: PHP/5.6.40  Remediation    : Send a Permissions-Policy header disabling unused features.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[INFORMATIONAL] DOXA-018  Missing Referrer-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-15T22:32:43Z
+  Description    : Full URLs may leak to other sites via the Referer header.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Server: LabServer/1.2.3 
+      Date: Sun, 15 Nov 2026 22:32:42 GMT
+      Content-Type: text/html
+      Content-Length: 196
+      Connection: close
+      Set-Cookie: sid=<redacted>; Path=/
+      Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+      X-Powered-By: PHP/5.6.40  Remediation    : Send Referrer-Policy: strict-origin-when-cross-origin or stricter.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[INFORMATIONAL] DOXA-019  Web service identified
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:18082
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-15T22:32:43Z
+  Description    : HTTP(S) service reachable. Server: LabServer/1.2.3 . HTTP available: 1, HTTPS available: 0.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Title: DOXA Lab; Resolved IPs: 127.0.0.1  Remediation    : No action required.
+
+[INFORMATIONAL] DOXA-020  sitemap.xml is publicly accessible
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:18082/sitemap.xml
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-15T22:32:43Z
+  Description    : A sitemap with 1 entries is published.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      http://lab/a  Remediation    : No action required unless the sitemap exposes non-public URLs.
+
+7. MODULE AND TOOL EXECUTION
+------------------------------------------------------------------------------
+  recon      OK              1s  HTTP=1 HTTPS=0 server=LabServer/1.2.3 
+  nmap       SKIPPED         0s  required tool not installed: nmap
+  whatweb    SKIPPED         0s  required tool not installed: whatweb
+  http       OK              1s  17 findings
+  tls        SKIPPED         0s  no HTTPS endpoint detected
+  gobuster   SKIPPED         0s  required tool not installed: gobuster
+  nikto      SKIPPED         0s  required tool not installed: nikto
+  nuclei     SKIPPED         0s  required tool not installed: nuclei
+  params     SKIPPED         0s  not part of the 'standard' profile
+  evidence   SKIPPED         0s  no screenshot tool (install chromium); headers and page body archived
+
+
+8. LIMITATIONS AND UNTESTED AREAS
+------------------------------------------------------------------------------
+  - Point-in-time, unauthenticated black-box assessment; authenticated areas, session handling after login and business logic were not tested.
+  - Automated scanners produce false positives and false negatives; every finding classified as Potential or Unverified requires manual validation.
+  - No exploitation, credential extraction, data modification, file upload, brute-force or denial-of-service testing was performed.
+  - Only approved hosts and ports were contacted; redirects to unapproved destinations were not followed.
+  - Wordlist-based discovery cannot prove absence of content; JavaScript-rendered routes and authenticated API endpoints were not enumerated.
+  - OWASP Top 10 mapping is indicative. It does not establish compliance or non-compliance with any standard.
+  - CVSS scores are provided only where the evidence supports a defensible vector; all other findings are intentionally not scored.
+  - No screenshots were captured (no headless browser found).
+  - Module nmap skipped: required tool not installed: nmap
+  - Module whatweb skipped: required tool not installed: whatweb
+  - Module tls skipped: no HTTPS endpoint detected
+  - Module gobuster skipped: required tool not installed: gobuster
+  - Module nikto skipped: required tool not installed: nikto
+  - Module nuclei skipped: required tool not installed: nuclei
+  - Module params skipped: not part of the 'standard' profile
+  - Module evidence skipped: no screenshot tool (install chromium); headers and page body archived
+
+9. EVIDENCE INTEGRITY (SHA-256)
+------------------------------------------------------------------------------
+  Artefact manifest: logs/evidence.sha256 (9 files); report files: logs/reports.sha256
+
+==============================================================================
+Confidential: contains security-sensitive information. Secrets are redacted.
+==============================================================================

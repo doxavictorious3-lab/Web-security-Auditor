@@ -1,0 +1,65 @@
+[2026-11-16 07:13:04] [INFO] DOXA Web Security Auditor 2.0.1 started; target=http://127.0.0.1:3000 mode=standard threads=10 rate=100 tls_verify=1
+[2026-11-16 07:13:04] [INFO] Target     : [96mhttp://127.0.0.1:3000[0m  (127.0.0.1)
+[2026-11-16 07:13:04] [INFO] Scope      : hosts=[127.0.0.1] ports=[3000]
+[2026-11-16 07:13:04] [INFO] Profile    : standard - Standard security assessment: passive set plus nmap web ports, exposed-file probes, gobuster, nikto and nuclei with safe settings.
+[2026-11-16 07:13:04] [INFO] Modules    : recon nmap whatweb http tls gobuster nikto nuclei evidence
+[2026-11-16 07:13:04] [INFO] Limits     : threads=10 rate=100/s tool-timeout=900s tls-verify=on
+[2026-11-16 07:13:04] [INFO] Output     : /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304
+[2026-11-16 07:13:04] [FINDING] [INFORMATIONAL] Server returns HTTP 200 for non-existent pages (soft-404) (http://127.0.0.1:3000)
+[2026-11-16 07:13:04] [FINDING] [INFORMATIONAL] robots.txt is publicly accessible (http://127.0.0.1:3000/robots.txt)
+[2026-11-16 07:13:04] [FINDING] [INFORMATIONAL] Web service identified (http://127.0.0.1:3000)
+[2026-11-16 07:13:04] [CMD] nmap: nmap -Pn -sV --script http-title,http-server-header,http-methods,http-headers,http-robots.txt,ssl-cert,banner --max-retries 2 --host-timeout 900s -oA /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/nmap/nmap -p 21,22,23,25,53,80,110,143,443,445,465,587,993,995,1433,2375,3000,3306,3389,5000,5432,5900,6379,8000,8008,8080,8081,8088,8443,8888,9000,9200,27017 -T3 --version-intensity 2 --max-rate 100 127.0.0.1
+[2026-11-16 07:13:26] [FINDING] [INFORMATIONAL] Open TCP ports and services (tcp://127.0.0.1)
+[2026-11-16 07:13:26] [CMD] whatweb: whatweb -a 1 --max-redirects=0 --color=never --user-agent DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --log-json=/home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/logs/whatweb.json http://127.0.0.1:3000
+[2026-11-16 07:13:30] [FINDING] [INFORMATIONAL] Detected web technologies (http://127.0.0.1:3000)
+[2026-11-16 07:13:30] [FINDING] [LOW] Missing Content-Security-Policy header (http://127.0.0.1:3000/)
+[2026-11-16 07:13:30] [FINDING] [INFORMATIONAL] Missing Referrer-Policy header (http://127.0.0.1:3000/)
+[2026-11-16 07:13:30] [FINDING] [INFORMATIONAL] Missing Permissions-Policy header (http://127.0.0.1:3000/)
+[2026-11-16 07:13:30] [FINDING] [MEDIUM] Site served only over unencrypted HTTP (http://127.0.0.1:3000/)
+[2026-11-16 07:13:30] [FINDING] [LOW] CORS allows any origin (wildcard) (http://127.0.0.1:3000)
+[2026-11-16 07:13:31] [CMD] gobuster: gobuster dir -u http://127.0.0.1:3000 -w /usr/share/wordlists/dirb/common.txt -t 10 -s 200,204,301,302,307,401,403 -b  -q --no-error -a DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --timeout 10s -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/gobuster/gobuster_dir.txt --delay 100ms
+[2026-11-16 07:13:31] [WARN] gobuster detected wildcard responses; retrying with --wildcard and filtering results
+[2026-11-16 07:13:31] [CMD] gobuster-wildcard: gobuster dir -u http://127.0.0.1:3000 -w /usr/share/wordlists/dirb/common.txt -t 10 -s 200,204,301,302,307,401,403 -b  -q --no-error -a DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --timeout 10s -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/gobuster/gobuster_dir.txt --delay 100ms --wildcard
+[2026-11-16 07:13:32] [WARN] module gobuster: FAILED - gobuster exit 1, no results; see logs/gobuster.log
+[2026-11-16 07:13:32] [CMD] nikto: nikto -h http://127.0.0.1:3000 -ask no -nointeractive -maxtime 600s -timeout 10 -Tuning 1234b -Format json -output /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/nikto/nikto.json
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: /robots.txt: Entry '/ftp/' is returned a non-forbidden or redirect HTTP code (200). (http://127.0.0.1:3000/ftp/)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: A user's home directory may be set to the web root, the shell history was retrieved. This  (http://127.0.0.1:3000/.bash_history)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: A user's home directory may be set to the web root, the shell history was retrieved. This  (http://127.0.0.1:3000/.sh_history)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: Contains authorization information. (http://127.0.0.1:3000/.htpasswd)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: Database SQL?. (http://127.0.0.1:3000/.mysql_history)
+[2026-11-16 07:14:51] [FINDING] [MEDIUM] Nikto: JAMon - Java Application Monitor Admin interface identified. Versions 2.7 and earlier cont (http://127.0.0.1:3000/JAMonAdmin.jsp)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: Retrieved access-control-allow-origin header: \*. (http://127.0.0.1:3000/)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/.psql_history)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/.sqlite_history)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/PasswordsData.json)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/accounts.json)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/conn.json)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/conndb.json)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/connection.json)
+[2026-11-16 07:14:51] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/connections.json)
+[2026-11-16 07:14:52] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/ftp/)
+[2026-11-16 07:14:52] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/login.json)
+[2026-11-16 07:14:52] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/master.json)
+[2026-11-16 07:14:52] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/masters.json)
+[2026-11-16 07:14:52] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/public/)
+[2026-11-16 07:14:52] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/userdata.json)
+[2026-11-16 07:14:52] [FINDING] [INFORMATIONAL] Nikto: This might be interesting. (http://127.0.0.1:3000/users.json)
+[2026-11-16 07:14:52] [FINDING] [INFORMATIONAL] Nikto: Uncommon header(s) 'x-recruiting' found, with contents: /#/jobs. (http://127.0.0.1:3000/)
+[2026-11-16 07:14:52] [FINDING] [INFORMATIONAL] Nikto: contains 1 entry which should be manually viewed. (http://127.0.0.1:3000/robots.txt)
+[2026-11-16 07:14:52] [CMD] nuclei: nuclei -u http://127.0.0.1:3000 -silent -nc -duc -timeout 10 -retries 1 -rl 100 -c 10 -jsonl -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/nuclei/nuclei.jsonl -etags dos,intrusive,fuzz,dast,bruteforce,brute-force,destructive,default-login -ni -tags tech,exposure,misconfig,cve,cms,xss,sqli,lfi,traversal,ssrf,takeover,wordpress,joomla,drupal
+[2026-11-16 07:17:06] [FINDING] [INFORMATIONAL] Nuclei: Public Swagger API - Detect (http://127.0.0.1:3000/api-docs/swagger.json)
+[2026-11-16 07:17:06] [FINDING] [MEDIUM] Nuclei: Prometheus Metrics - Detect (http://127.0.0.1:3000/metrics)
+[2026-11-16 07:17:06] [FINDING] [INFORMATIONAL] Nuclei: Add DOM EventListener - Detection (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [FINDING] [INFORMATIONAL] Nuclei: OWASP Juice Shop (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [FINDING] [INFORMATIONAL] Nuclei: FingerprintHub Technology Fingerprint (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [FINDING] [INFORMATIONAL] Nuclei: Wappalyzer Technology Detection (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [FINDING] [INFORMATIONAL] Nuclei: HTTP Missing Security Headers (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:3000)
+[2026-11-16 07:17:06] [CMD] chromium: chromium --headless --no-sandbox --disable-gpu --ignore-certificate-errors --hide-scrollbars --window-size=1366,768 --screenshot=/home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_3000_20261116_071304/screenshots/homepage.png http://127.0.0.1:3000/
+[2026-11-16 07:17:12] [WARN] 1 module(s) failed, timed out or were interrupted - see the report limitations section.

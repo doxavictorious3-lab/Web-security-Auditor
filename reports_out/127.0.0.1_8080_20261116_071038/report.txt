@@ -1,0 +1,632 @@
+==============================================================================
+  DOXA Web Security Auditor v2.0.1 - Security Assessment Report
+==============================================================================
+Target       : http://127.0.0.1:8080
+Host / IPs   : 127.0.0.1 / 127.0.0.1
+Mode         : standard   Threads: 10   Max req/s: 100
+Started      : 2026-11-16T07:10:38Z
+Finished     : 2026-11-16T07:14:45Z (247 seconds)
+Server       : Apache/2.4.25 (Debian)
+
+1. SCOPE AND AUTHORIZATION
+------------------------------------------------------------------------------
+Authorization: command-line flag (--authorized) at 2026-11-16T07:10:38Z (operator confirmed ownership or written permission)
+Approved hosts: 127.0.0.1
+Approved ports: 8080
+Out-of-scope requests blocked: 0
+TLS verification: enabled
+
+2. EXECUTIVE SUMMARY
+------------------------------------------------------------------------------
+Overall risk: Medium    Findings: 33    CVSS-scored: 3    Duplicates suppressed: 9
+  CRITICAL       0
+  HIGH           0
+  MEDIUM         8
+  LOW            5
+  INFORMATIONAL  20
+Classification:
+  Confirmed vulnerability                  12
+  Potential vulnerability                  3
+  Informational observation                15
+  False positive or unverified result      3
+
+3. OWASP TOP 10 (2021) MAPPING (indicative, not a compliance statement)
+------------------------------------------------------------------------------
+  A05:2021 Security Misconfiguration                      18
+  A06:2021 Vulnerable and Outdated Components             1
+  A07:2021 Identification and Authentication Failures     2
+  Not mapped (informational)                              12
+
+4. TECHNOLOGIES
+------------------------------------------------------------------------------
+  - Apache[2.4.25]
+  - Cookies[PHPSESSID,security]
+  - Country[RESERVED]
+  - HTTPServer[Apache/2.4.25 (Debian)]
+  - IP[127.0.0.1]
+  - RedirectLocation[login.php]
+  - Server: Apache/2.4.25 (Debian)
+  - Service: http
+  - Service: ppp?
+
+5. OPEN PORTS AND SERVICES
+------------------------------------------------------------------------------
+  3000/tcp ppp? 
+  8080/tcp http Apache httpd 2.4.25 ((Debian))
+
+6. FINDINGS
+------------------------------------------------------------------------------
+
+[MEDIUM] DOXA-001  Cookie without HttpOnly attribute
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:11:10Z
+  Description    : Cookies without HttpOnly can be read by JavaScript and stolen through XSS.
+  Impact         : Session cookies may be exposed to script access or sent over insecure channels, increasing the risk of session theft.
+  Evidence       :
+      Cookie names (values not stored): PHPSESSID security 
+  Remediation    : Set the HttpOnly attribute on cookies that JavaScript does not need.
+  False positives: Cookies used only for client-side preferences may legitimately omit HttpOnly.
+
+[MEDIUM] DOXA-002  Directory listing enabled
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/config/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Directory index confirmed readable without authentication; sensitivity of the listed files was not assessed, so confidentiality impact is scored Low.
+  Module / tool  : gobuster / curl   at 2026-11-16T07:11:59Z
+  Description    : The web server lists directory contents, exposing file names and potentially sensitive files.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      GET /config/ -> HTTP 200; auto-index page detected: Index of /config
+  Remediation    : Disable directory indexing (Options -Indexes, autoindex off) and review exposed files.
+  False positives: Intentional public file mirrors may be listed on purpose.
+
+[MEDIUM] DOXA-003  Directory listing enabled
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/docs/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Directory index confirmed readable without authentication; sensitivity of the listed files was not assessed, so confidentiality impact is scored Low.
+  Module / tool  : gobuster / curl   at 2026-11-16T07:11:59Z
+  Description    : The web server lists directory contents, exposing file names and potentially sensitive files.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      GET /docs/ -> HTTP 200; auto-index page detected: Index of /docs
+  Remediation    : Disable directory indexing (Options -Indexes, autoindex off) and review exposed files.
+  False positives: Intentional public file mirrors may be listed on purpose.
+
+[MEDIUM] DOXA-004  Directory listing enabled
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/external/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Directory index confirmed readable without authentication; sensitivity of the listed files was not assessed, so confidentiality impact is scored Low.
+  Module / tool  : gobuster / curl   at 2026-11-16T07:11:59Z
+  Description    : The web server lists directory contents, exposing file names and potentially sensitive files.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      GET /external/ -> HTTP 200; auto-index page detected: Index of /external
+  Remediation    : Disable directory indexing (Options -Indexes, autoindex off) and review exposed files.
+  False positives: Intentional public file mirrors may be listed on purpose.
+
+[MEDIUM] DOXA-005  Nikto: .gitignore file found. It is possible to grasp the directory structure.
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:8080/.gitignore
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:12:05Z
+  Description    : .gitignore file found. It is possible to grasp the directory structure.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Nikto id 007224, method GET: .gitignore file found. It is possible to grasp the directory structure.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[MEDIUM] DOXA-006  Nikto: Apache/2.4.25 appears to be outdated (current is at least 2.4.68).
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:8080/
+  OWASP          : A06:2021 Vulnerable and Outdated Components
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:12:05Z
+  Description    : Apache/2.4.25 appears to be outdated (current is at least 2.4.68).
+  Impact         : Known vulnerabilities in outdated components may be exploitable by attackers.
+  Evidence       :
+      Nikto id 600050, method HEAD: Apache/2.4.25 appears to be outdated (current is at least 2.4.68).
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[MEDIUM] DOXA-007  Nuclei: Sensitive Configuration Files Listing - Detect
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/config/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:44Z
+  Description    : Listing of sensitive configuration files containing items such as usernames, passwords, and IP addresses was detected.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Template: configuration-listing | Matched at: http://127.0.0.1:8080/config/
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[MEDIUM] DOXA-008  Potentially sensitive file discovered: /php.ini
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:8080/php.ini
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : gobuster / gobuster   at 2026-11-16T07:11:59Z
+  Description    : A backup/config/log style file returned HTTP 200. Content was not inspected.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      /php.ini (Status: 200, Size: 148)
+  Remediation    : Verify the file contents; remove or restrict it if it should not be public.
+  False positives: A 200 response may be a generic page. Content not validated.
+
+[LOW] DOXA-009  Cookie without SameSite attribute
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:11:10Z
+  Description    : Without SameSite, cookies are sent on cross-site requests in older browsers, aiding CSRF.
+  Impact         : Session cookies may be exposed to script access or sent over insecure channels, increasing the risk of session theft.
+  Evidence       :
+      Cookie names (values not stored): PHPSESSID security 
+  Remediation    : Set SameSite=Lax or Strict (None only with Secure when required).
+  False positives: Modern browsers default to Lax, reducing the practical risk.
+
+[LOW] DOXA-010  Missing Content-Security-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:11:09Z
+  Description    : No CSP is set, so the browser has no policy limiting where scripts and other resources may load from, reducing defence against XSS.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Date: Mon, 16 Nov 2026 07:10:44 GMT
+      Server: Apache/2.4.25 (Debian)
+      Set-Cookie: PHPSESSID=<redacted>; path=/
+      Expires: Tue, 23 Jun 2009 12:00:00 GMT
+      Cache-Control: no-cache, must-revalidate
+      Pragma: no-cache
+      Set-Cookie: PHPSESSID=<redacted>; path=/
+      Set-Cookie: security=<redacted>
+      Vary: Accept-Encoding
+      Content-Length: 1523
+      Content-Type: text/html;charset=utf-8
+  Remediation    : Define a restrictive Content-Security-Policy (avoid unsafe-inline/unsafe-eval).
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[LOW] DOXA-011  Missing X-Content-Type-Options header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:11:10Z
+  Description    : Without nosniff, browsers may MIME-sniff responses, enabling content-type confusion attacks.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Date: Mon, 16 Nov 2026 07:10:44 GMT
+      Server: Apache/2.4.25 (Debian)
+      Set-Cookie: PHPSESSID=<redacted>; path=/
+      Expires: Tue, 23 Jun 2009 12:00:00 GMT
+      Cache-Control: no-cache, must-revalidate
+      Pragma: no-cache
+      Set-Cookie: PHPSESSID=<redacted>; path=/
+      Set-Cookie: security=<redacted>
+      Vary: Accept-Encoding
+      Content-Length: 1523
+      Content-Type: text/html;charset=utf-8
+  Remediation    : Send X-Content-Type-Options: nosniff on all responses.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[LOW] DOXA-012  Missing clickjacking protection (X-Frame-Options / frame-ancestors)
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:11:10Z
+  Description    : The page can be embedded in third-party frames, enabling clickjacking.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Date: Mon, 16 Nov 2026 07:10:44 GMT
+      Server: Apache/2.4.25 (Debian)
+      Set-Cookie: PHPSESSID=<redacted>; path=/
+      Expires: Tue, 23 Jun 2009 12:00:00 GMT
+      Cache-Control: no-cache, must-revalidate
+      Pragma: no-cache
+      Set-Cookie: PHPSESSID=<redacted>; path=/
+      Set-Cookie: security=<redacted>
+      Vary: Accept-Encoding
+      Content-Length: 1523
+      Content-Type: text/html;charset=utf-8
+  Remediation    : Send X-Frame-Options: DENY (or SAMEORIGIN) or a CSP frame-ancestors directive.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[LOW] DOXA-013  Version information disclosed in server header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:11:10Z
+  Description    : The server header discloses software and version details that help attackers select exploits.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      Server: Apache/2.4.25 (Debian)
+  Remediation    : Remove or genericise version banners (e.g. ServerTokens Prod, server_tokens off, expose_php=Off).
+  False positives: Disclosure alone is not exploitable; it only reduces attacker effort.
+
+[INFORMATIONAL] DOXA-014  Detected web technologies
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:8080
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : whatweb / whatweb   at 2026-11-16T07:11:09Z
+  Description    : WhatWeb fingerprinted the following technologies (aggression level 1).
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Apache[2.4.25]
+      Cookies[PHPSESSID,security]
+      Country[RESERVED]
+      HTTPServer[Apache/2.4.25 (Debian)]
+      IP[127.0.0.1]
+      RedirectLocation[login.php]
+  Remediation    : Reduce unnecessary technology disclosure (version banners, generator tags) and keep all components patched.
+  False positives: Fingerprinting is heuristic; versions may be inaccurate or masked.
+
+[INFORMATIONAL] DOXA-015  Discovered accessible paths (12)
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:8080
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : gobuster / gobuster   at 2026-11-16T07:11:59Z
+  Description    : Gobuster found 12 path(s) returning interesting status codes using wordlist common.txt.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      /config 301 314
+      /docs 301 312
+      /external 301 316
+      /favicon.ico 200 1406
+      /.hta 403 290
+      /.htaccess 403 295
+      /.htpasswd 403 295
+      /index.php 302 0
+      /phpinfo.php 302 0
+      /php.ini 200 148
+      /robots.txt 200 26
+      /server-status 403 299
+  Remediation    : Review discovered paths and remove or protect anything not meant to be public.
+  False positives: Status 403/401 only proves existence. Verify each path manually; wildcard filtering is heuristic.
+
+[INFORMATIONAL] DOXA-016  Missing Permissions-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:11:10Z
+  Description    : Browser features (camera, geolocation, etc.) are not explicitly restricted.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Date: Mon, 16 Nov 2026 07:10:44 GMT
+      Server: Apache/2.4.25 (Debian)
+      Set-Cookie: PHPSESSID=<redacted>; path=/
+      Expires: Tue, 23 Jun 2009 12:00:00 GMT
+      Cache-Control: no-cache, must-revalidate
+      Pragma: no-cache
+      Set-Cookie: PHPSESSID=<redacted>; path=/
+      Set-Cookie: security=<redacted>
+      Vary: Accept-Encoding
+      Content-Length: 1523
+      Content-Type: text/html;charset=utf-8
+  Remediation    : Send a Permissions-Policy header disabling unused features.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[INFORMATIONAL] DOXA-017  Missing Referrer-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-16T07:11:10Z
+  Description    : Full URLs may leak to other sites via the Referer header.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Date: Mon, 16 Nov 2026 07:10:44 GMT
+      Server: Apache/2.4.25 (Debian)
+      Set-Cookie: PHPSESSID=<redacted>; path=/
+      Expires: Tue, 23 Jun 2009 12:00:00 GMT
+      Cache-Control: no-cache, must-revalidate
+      Pragma: no-cache
+      Set-Cookie: PHPSESSID=<redacted>; path=/
+      Set-Cookie: security=<redacted>
+      Vary: Accept-Encoding
+      Content-Length: 1523
+      Content-Type: text/html;charset=utf-8
+  Remediation    : Send Referrer-Policy: strict-origin-when-cross-origin or stricter.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[INFORMATIONAL] DOXA-018  Nikto: Admin login page/section found.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:12:05Z
+  Description    : Admin login page/section found.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 006333, method GET: Admin login page/section found.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-019  Nikto: Apache default file found.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:8080/icons/README
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:12:05Z
+  Description    : Apache default file found.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 003584, method GET: Apache default file found.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-020  Nikto: Configuration information may be available remotely.
+  Classification : False positive or unverified result   Confidence: Low
+  Affected URL   : http://127.0.0.1:8080/config/
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nikto / nikto   at 2026-11-16T07:12:05Z
+  Description    : Configuration information may be available remotely.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Nikto id 000998, method GET: Configuration information may be available remotely.
+  Remediation    : Manually verify the Nikto observation; remove or restrict the exposed resource, patch the affected software or harden the server configuration.
+  False positives: Nikto is signature based and frequently reports items that are not exploitable. Verify manually before treating as a vulnerability.
+
+[INFORMATIONAL] DOXA-021  Nuclei: Cookies without HttpOnly attribute - Detect
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : 127.0.0.1:8080
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:43Z
+  Description    : Checks whether cookies in the HTTP response contain the HttpOnly attribute. If the HttpOnly flag is set, it means that the cookie is HTTP-only 
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Template: cookies-without-httponly | Matched at: 127.0.0.1:8080 | Extracted: PHPSESSID, security
+  Remediation    : Ensure that all cookies are set with the HttpOnly attribute to prevent client-side access. 
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-022  Nuclei: Cookies without Secure attribute - Detect
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : 127.0.0.1:8080
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:43Z
+  Description    : Checks whether cookies in the HTTP response contain the Secure attribute. If the Secure flag is set, it means that the cookie can only be transmitted over HTTPS 
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Template: cookies-without-secure | Matched at: 127.0.0.1:8080 | Extracted: security, PHPSESSID
+  Remediation    : Ensure that all cookies are set with the Secure attribute to prevent MITM attacks. 
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-023  Nuclei: FingerprintHub Technology Fingerprint
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:43Z
+  Description    : FingerprintHub Technology Fingerprint tests run in nuclei.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Template: fingerprinthub-web-fingerprints | Matched at: http://127.0.0.1:8080/login.php | Matcher: dvwa
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-024  Nuclei: Gitignore Config - Detect
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/.gitignore
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:44Z
+  Description    : Gitignore configuration information was detected.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Template: exposed-gitignore | Matched at: http://127.0.0.1:8080/.gitignore
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-025  Nuclei: HTTP Missing Security Headers
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:8080/login.php
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:43Z
+  Description    : This template searches for missing HTTP security headers. The impact of these missing headers can vary. 
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Template: http-missing-security-headers | Matched at: http://127.0.0.1:8080/login.php | Matcher: cross-origin-opener-policy
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-026  Nuclei: Missing Cookie SameSite Strict
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:8080
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:43Z
+  Description    : Identified cookies that lacked the samesite=strict attribute, which prevented enforcement of restrictions on cross-domain cookie transmission. 
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Template: missing-cookie-samesite-strict | Matched at: http://127.0.0.1:8080 | Extracted: PHPSESSID=vb62f3pmej4hjck22gs8cs11c7; path=/ PHPSESSID=vb62f3pmej4hjck22gs8cs11c7; path=/ security=low
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-027  Nuclei: PHP Detect
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:8080
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:43Z
+  Description    : Detected by Nuclei template.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Template: php-detect | Matched at: http://127.0.0.1:8080
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-028  Nuclei: README.md file disclosure
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/README.md
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:43Z
+  Description    : Internal documentation file often used in projects which can contain sensitive information.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      Template: readme-md | Matched at: http://127.0.0.1:8080/README.md
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-029  Nuclei: WAF Detection
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:8080
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:43Z
+  Description    : A web application firewall was detected.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Template: waf-detect | Matched at: http://127.0.0.1:8080 | Matcher: apachegeneric
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-030  Nuclei: Wappalyzer Technology Detection
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:8080
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nuclei / nuclei   at 2026-11-16T07:14:43Z
+  Description    : Detected by Nuclei template.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Template: tech-detect | Matched at: http://127.0.0.1:8080 | Matcher: php
+  Remediation    : Review the template advisory and apply vendor patches or configuration hardening.
+  False positives: Template-based match. Version-based CVE detections can be false positives when vendors back-port patches. Verify manually.
+
+[INFORMATIONAL] DOXA-031  Open TCP ports and services
+  Classification : Informational observation   Confidence: High
+  Affected URL   : tcp://127.0.0.1
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : nmap / nmap   at 2026-11-16T07:11:06Z
+  Description    : Nmap identified 2 open port(s) among the scanned set.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      3000/tcp ppp? 
+      8080/tcp http Apache httpd 2.4.25 ((Debian))
+  Remediation    : Close or firewall services that do not need to be reachable; keep only required ports exposed.
+  False positives: Reachability depends on the scanning vantage point and any rate-limiting or IDS.
+
+[INFORMATIONAL] DOXA-032  Web service identified
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:8080
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-16T07:10:44Z
+  Description    : HTTP(S) service reachable. Server: Apache/2.4.25 (Debian). HTTP available: 1, HTTPS available: 0.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Title: Login :: Damn Vulnerable Web Application (DVWA) v1.10 *Development*; Resolved IPs: 127.0.0.1
+  Remediation    : No action required.
+
+[INFORMATIONAL] DOXA-033  robots.txt is publicly accessible
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:8080/robots.txt
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-16T07:10:44Z
+  Description    : robots.txt exists and lists crawler directives.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Disallow: /
+  Remediation    : No action required.
+
+7. MODULE AND TOOL EXECUTION
+------------------------------------------------------------------------------
+  recon      OK              6s  HTTP=1 HTTPS=0 server=Apache/2.4.25 (Debian)
+  nmap       OK             22s  2 open port(s)
+  whatweb    OK              3s  6 technologies
+  http       OK              2s  8 findings
+  tls        SKIPPED         0s  no HTTPS endpoint detected
+  gobuster   OK             48s  12 path(s)
+  nikto      OK              7s  5 nikto item(s)
+  nuclei     OK            158s  20 nuclei finding(s)
+  params     SKIPPED         0s  not part of the 'standard' profile
+  evidence   OK              1s  screenshot captured with chromium
+
+  $ nmap -Pn -sV --script http-title,http-server-header,http-methods,http-headers,http-robots.txt,ssl-cert,banner --max-retries 2 --host-timeout 900s -oA /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/nmap/nmap -p 21,22,23,25,53,80,110,143,443,445,465,587,993,995,1433,2375,3000,3306,3389,5000,5432,5900,6379,8000,8008,8080,8081,8088,8443,8888,9000,9200,27017 -T3 --version-intensity 2 --max-rate 100 127.0.0.1   [exit 0, 22s]
+  $ whatweb -a 1 --max-redirects=0 --color=never --user-agent DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --log-json=/home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/logs/whatweb.json http://127.0.0.1:8080   [exit 0, 3s]
+  $ gobuster dir -u http://127.0.0.1:8080 -w /usr/share/wordlists/dirb/common.txt -t 10 -s 200,204,301,302,307,401,403 -b  -q --no-error -a DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --timeout 10s -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/gobuster/gobuster_dir.txt --delay 100ms   [exit 0, 47s]
+  $ nikto -h http://127.0.0.1:8080 -ask no -nointeractive -maxtime 600s -timeout 10 -Tuning 1234b -Format json -output /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/nikto/nikto.json   [exit 0, 6s]
+  $ nuclei -u http://127.0.0.1:8080 -silent -nc -duc -timeout 10 -retries 1 -rl 100 -c 10 -jsonl -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/nuclei/nuclei.jsonl -etags dos,intrusive,fuzz,dast,bruteforce,brute-force,destructive,default-login -ni -tags tech,exposure,misconfig,cve,cms,xss,sqli,lfi,traversal,ssrf,takeover,wordpress,joomla,drupal   [exit 0, 157s]
+  $ chromium --headless --no-sandbox --disable-gpu --ignore-certificate-errors --hide-scrollbars --window-size=1366,768 --screenshot=/home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/screenshots/homepage.png http://127.0.0.1:8080/   [exit 0, 1s]
+
+8. LIMITATIONS AND UNTESTED AREAS
+------------------------------------------------------------------------------
+  - Point-in-time, unauthenticated black-box assessment; authenticated areas, session handling after login and business logic were not tested.
+  - Automated scanners produce false positives and false negatives; every finding classified as Potential or Unverified requires manual validation.
+  - No exploitation, credential extraction, data modification, file upload, brute-force or denial-of-service testing was performed.
+  - Only approved hosts and ports were contacted; redirects to unapproved destinations were not followed.
+  - Wordlist-based discovery cannot prove absence of content; JavaScript-rendered routes and authenticated API endpoints were not enumerated.
+  - OWASP Top 10 mapping is indicative. It does not establish compliance or non-compliance with any standard.
+  - CVSS scores are provided only where the evidence supports a defensible vector; all other findings are intentionally not scored.
+  - Nikto manages its own TLS handling; DOXA cannot enforce certificate validation inside Nikto, Nuclei or WhatWeb.
+  - Nuclei out-of-band (OAST) templates were disabled; blind SSRF/injection checks that need a callback server were not run (use --oast to enable).
+  - Module tls skipped: no HTTPS endpoint detected
+  - Module params skipped: not part of the 'standard' profile
+
+9. EVIDENCE INTEGRITY (SHA-256)
+------------------------------------------------------------------------------
+  Artefact manifest: logs/evidence.sha256 (27 files); report files: logs/reports.sha256
+
+==============================================================================
+Confidential: contains security-sensitive information. Secrets are redacted.
+==============================================================================

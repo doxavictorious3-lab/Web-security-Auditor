@@ -1,0 +1,10 @@
+recon	OK	0	HTTP=1 HTTPS=0 server=unknown
+nmap	OK	22	2 open port(s)
+whatweb	OK	4	7 technologies
+http	OK	1	5 findings
+tls	SKIPPED	0	no HTTPS endpoint detected
+gobuster	FAILED	1	gobuster exit 1, no results; see logs/gobuster.log
+nikto	OK	80	24 nikto item(s)
+nuclei	OK	134	14 nuclei finding(s)
+params	SKIPPED	0	not part of the 'standard' profile
+evidence	OK	2	screenshot captured with chromium

@@ -1,0 +1,57 @@
+[2026-11-16 07:10:38] [INFO] DOXA Web Security Auditor 2.0.1 started; target=http://127.0.0.1:8080 mode=standard threads=10 rate=100 tls_verify=1
+[2026-11-16 07:10:38] [INFO] Target     : [96mhttp://127.0.0.1:8080[0m  (127.0.0.1)
+[2026-11-16 07:10:38] [INFO] Scope      : hosts=[127.0.0.1] ports=[8080]
+[2026-11-16 07:10:38] [INFO] Profile    : standard - Standard security assessment: passive set plus nmap web ports, exposed-file probes, gobuster, nikto and nuclei with safe settings.
+[2026-11-16 07:10:38] [INFO] Modules    : recon nmap whatweb http tls gobuster nikto nuclei evidence
+[2026-11-16 07:10:38] [INFO] Limits     : threads=10 rate=100/s tool-timeout=900s tls-verify=on
+[2026-11-16 07:10:38] [INFO] Output     : /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038
+[2026-11-16 07:10:44] [FINDING] [INFORMATIONAL] robots.txt is publicly accessible (http://127.0.0.1:8080/robots.txt)
+[2026-11-16 07:10:44] [FINDING] [INFORMATIONAL] Web service identified (http://127.0.0.1:8080)
+[2026-11-16 07:10:44] [CMD] nmap: nmap -Pn -sV --script http-title,http-server-header,http-methods,http-headers,http-robots.txt,ssl-cert,banner --max-retries 2 --host-timeout 900s -oA /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/nmap/nmap -p 21,22,23,25,53,80,110,143,443,445,465,587,993,995,1433,2375,3000,3306,3389,5000,5432,5900,6379,8000,8008,8080,8081,8088,8443,8888,9000,9200,27017 -T3 --version-intensity 2 --max-rate 100 127.0.0.1
+[2026-11-16 07:11:06] [FINDING] [INFORMATIONAL] Open TCP ports and services (tcp://127.0.0.1)
+[2026-11-16 07:11:06] [CMD] whatweb: whatweb -a 1 --max-redirects=0 --color=never --user-agent DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --log-json=/home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/logs/whatweb.json http://127.0.0.1:8080
+[2026-11-16 07:11:09] [FINDING] [INFORMATIONAL] Detected web technologies (http://127.0.0.1:8080)
+[2026-11-16 07:11:10] [FINDING] [LOW] Missing Content-Security-Policy header (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:11:10] [FINDING] [LOW] Missing X-Content-Type-Options header (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:11:10] [FINDING] [LOW] Missing clickjacking protection (X-Frame-Options / frame-ancestors) (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:11:10] [FINDING] [INFORMATIONAL] Missing Referrer-Policy header (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:11:10] [FINDING] [INFORMATIONAL] Missing Permissions-Policy header (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:11:10] [FINDING] [LOW] Version information disclosed in server header (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:11:10] [FINDING] [MEDIUM] Cookie without HttpOnly attribute (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:11:10] [FINDING] [LOW] Cookie without SameSite attribute (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:11:11] [CMD] gobuster: gobuster dir -u http://127.0.0.1:8080 -w /usr/share/wordlists/dirb/common.txt -t 10 -s 200,204,301,302,307,401,403 -b  -q --no-error -a DOXA-Web-Security-Auditor/2.0 (authorized security assessment) --timeout 10s -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/gobuster/gobuster_dir.txt --delay 100ms
+[2026-11-16 07:11:59] [FINDING] [INFORMATIONAL] Discovered accessible paths (12) (http://127.0.0.1:8080)
+[2026-11-16 07:11:59] [FINDING] [MEDIUM] Potentially sensitive file discovered: /php.ini (http://127.0.0.1:8080/php.ini)
+[2026-11-16 07:11:59] [FINDING] [MEDIUM] Directory listing enabled (http://127.0.0.1:8080/config/)
+[2026-11-16 07:11:59] [FINDING] [MEDIUM] Directory listing enabled (http://127.0.0.1:8080/docs/)
+[2026-11-16 07:11:59] [FINDING] [MEDIUM] Directory listing enabled (http://127.0.0.1:8080/external/)
+[2026-11-16 07:11:59] [CMD] nikto: nikto -h http://127.0.0.1:8080 -ask no -nointeractive -maxtime 600s -timeout 10 -Tuning 1234b -Format json -output /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/nikto/nikto.json
+[2026-11-16 07:12:05] [FINDING] [MEDIUM] Nikto: .gitignore file found. It is possible to grasp the directory structure. (http://127.0.0.1:8080/.gitignore)
+[2026-11-16 07:12:05] [FINDING] [INFORMATIONAL] Nikto: Admin login page/section found. (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:12:05] [FINDING] [INFORMATIONAL] Nikto: Apache default file found. (http://127.0.0.1:8080/icons/README)
+[2026-11-16 07:12:05] [FINDING] [MEDIUM] Nikto: Apache/2.4.25 appears to be outdated (current is at least 2.4.68). (http://127.0.0.1:8080/)
+[2026-11-16 07:12:05] [FINDING] [INFORMATIONAL] Nikto: Configuration information may be available remotely. (http://127.0.0.1:8080/config/)
+[2026-11-16 07:12:05] [DEDUP] nikto directory-indexing item already confirmed by the http/gobuster modules: /config/
+[2026-11-16 07:12:05] [DEDUP] nikto directory-indexing item already confirmed by the http/gobuster modules: /docs/
+[2026-11-16 07:12:06] [CMD] nuclei: nuclei -u http://127.0.0.1:8080 -silent -nc -duc -timeout 10 -retries 1 -rl 100 -c 10 -jsonl -o /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/nuclei/nuclei.jsonl -etags dos,intrusive,fuzz,dast,bruteforce,brute-force,destructive,default-login -ni -tags tech,exposure,misconfig,cve,cms,xss,sqli,lfi,traversal,ssrf,takeover,wordpress,joomla,drupal
+[2026-11-16 07:14:43] [FINDING] [INFORMATIONAL] Nuclei: Cookies without HttpOnly attribute - Detect (127.0.0.1:8080)
+[2026-11-16 07:14:43] [FINDING] [INFORMATIONAL] Nuclei: Cookies without Secure attribute - Detect (127.0.0.1:8080)
+[2026-11-16 07:14:43] [FINDING] [INFORMATIONAL] Nuclei: PHP Detect (http://127.0.0.1:8080)
+[2026-11-16 07:14:43] [FINDING] [INFORMATIONAL] Nuclei: WAF Detection (http://127.0.0.1:8080)
+[2026-11-16 07:14:43] [FINDING] [INFORMATIONAL] Nuclei: HTTP Missing Security Headers (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [DEDUP] duplicate finding suppressed: Nuclei: HTTP Missing Security Headers (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [FINDING] [INFORMATIONAL] Nuclei: README.md file disclosure (http://127.0.0.1:8080/README.md)
+[2026-11-16 07:14:43] [FINDING] [INFORMATIONAL] Nuclei: FingerprintHub Technology Fingerprint (http://127.0.0.1:8080/login.php)
+[2026-11-16 07:14:43] [FINDING] [INFORMATIONAL] Nuclei: Missing Cookie SameSite Strict (http://127.0.0.1:8080)
+[2026-11-16 07:14:43] [FINDING] [INFORMATIONAL] Nuclei: Wappalyzer Technology Detection (http://127.0.0.1:8080)
+[2026-11-16 07:14:44] [FINDING] [MEDIUM] Nuclei: Sensitive Configuration Files Listing - Detect (http://127.0.0.1:8080/config/)
+[2026-11-16 07:14:44] [FINDING] [INFORMATIONAL] Nuclei: Gitignore Config - Detect (http://127.0.0.1:8080/.gitignore)
+[2026-11-16 07:14:44] [CMD] chromium: chromium --headless --no-sandbox --disable-gpu --ignore-certificate-errors --hide-scrollbars --window-size=1366,768 --screenshot=/home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_071038/screenshots/homepage.png http://127.0.0.1:8080/

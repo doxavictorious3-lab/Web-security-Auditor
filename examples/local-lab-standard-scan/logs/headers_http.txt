@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+Server: LabServer/1.2.3 
+Date: Sun, 15 Nov 2026 22:32:42 GMT
+Content-Type: text/html
+Content-Length: 196
+Connection: close
+Set-Cookie: sid=<redacted>; Path=/
+Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+X-Powered-By: PHP/5.6.40
+

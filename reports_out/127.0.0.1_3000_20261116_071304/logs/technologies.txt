@@ -1,0 +1,9 @@
+Service: http
+Service: ppp?
+Country[RESERVED]
+HTML5
+IP[127.0.0.1]
+Script[module]
+Title[OWASP Juice Shop]
+UncommonHeaders[access-control-allow-origin,x-content-type-options,feature-policy,x-recruiting]
+X-Frame-Options[SAMEORIGIN]

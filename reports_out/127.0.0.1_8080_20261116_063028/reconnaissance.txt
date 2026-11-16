@@ -1,0 +1,41 @@
+DOXA Web Security Auditor - Reconnaissance
+Generated : 2026-11-16 06:30:28 UTC
+Target    : http://127.0.0.1:8080
+Host      : 127.0.0.1
+Resolved  : 127.0.0.1
+
+== DNS records ==
+(target is an IP address; forward DNS skipped)
+-- PTR
+localhost.
+
+== HTTP/HTTPS service detection ==
+http://127.0.0.1:8080              HTTP 302
+  [1] http://127.0.0.1:8080/ -> HTTP 302
+  [2] http://127.0.0.1:8080/login.php -> HTTP 200
+
+== Primary web service: http://127.0.0.1:8080 (HTTP 302) ==
+Server header : Apache/2.4.25 (Debian)
+X-Powered-By  : 
+Content-Type  : text/html; charset=UTF-8
+Page title    : <none>
+
+-- Response headers (cookie values redacted)
+HTTP/1.1 302 Found
+Date: Mon, 16 Nov 2026 06:30:28 GMT
+Server: Apache/2.4.25 (Debian)
+Set-Cookie: PHPSESSID=<redacted>; path=/
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Pragma: no-cache
+Set-Cookie: PHPSESSID=<redacted>; path=/
+Set-Cookie: security=<redacted>
+Location: login.php
+Content-Length: 0
+Content-Type: text/html; charset=UTF-8
+
+Soft-404 baseline: HTTP 404, 301 bytes
+
+== robots.txt (accessible) ==
+User-agent: *
+Disallow: /sitemap.xml: not found (HTTP 404)

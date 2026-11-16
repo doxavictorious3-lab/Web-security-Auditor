@@ -1,0 +1,43 @@
+DOXA Web Security Auditor - Reconnaissance
+Generated : 2026-11-16 07:13:04 UTC
+Target    : http://127.0.0.1:3000
+Host      : 127.0.0.1
+Resolved  : 127.0.0.1
+
+== DNS records ==
+(target is an IP address; forward DNS skipped)
+-- PTR
+localhost.
+
+== HTTP/HTTPS service detection ==
+http://127.0.0.1:3000              HTTP 200
+
+== Analysed page: http://127.0.0.1:3000/ (HTTP 200) ==
+Server header : <none>
+X-Powered-By  : 
+Content-Type  : text/html; charset=UTF-8
+Page title    : OWASP Juice Shop
+
+-- Response headers (cookie values redacted)
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+Feature-Policy: payment 'self'
+X-Recruiting: /#/jobs
+Accept-Ranges: bytes
+Cache-Control: public, max-age=0
+Last-Modified: Sun, 08 Nov 2026 19:11:10 GMT
+ETag: W/"2700-1a1bc9258b0"
+Content-Type: text/html; charset=UTF-8
+Content-Length: 9984
+Vary: Accept-Encoding
+Date: Mon, 16 Nov 2026 07:13:04 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+Soft-404 baseline: HTTP 200, 9984 bytes
+
+== robots.txt (accessible) ==
+User-agent: *
+Disallow: /ftpsitemap.xml: not found (HTTP 200)

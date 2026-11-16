@@ -1,0 +1,2 @@
+[1212421:1212425:1116/063341.860723:ERROR:base/nix/mime_util_xdg.cc:139] Invalid mime.cache file does not contain null prior to ALIAS_LIST_OFFSET=44
+24148 bytes written to file /home/doxa/testlabapp/doxa-web-security-auditor/reports_out/127.0.0.1_8080_20261116_063028/screenshots/homepage.png
