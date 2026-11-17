@@ -32,7 +32,18 @@ code{color:var(--green)}
 .note{color:var(--dim);font-size:13px}
 footer{margin:40px 0;color:var(--dim);text-align:center;font-size:12px}
 img.shot{max-width:100%;border:1px solid var(--line);border-radius:6px}
-@media print{body{background:#fff;color:#000}section,article{break-inside:avoid;border-color:#999;background:#fff}pre{background:#f4f4f4;color:#000}.card,th,h2,h4,.risk,code,header.top h1,header.top p,nav a{color:#000}}
+@media print{
+body{background:#fff!important;color:#000!important}
+nav{display:none!important}
+section,article{break-inside:avoid;border-color:#999!important;background:#fff!important}
+pre{background:#f4f4f4!important;color:#000!important;border-color:#bbb!important}
+.card{background:#fff!important;border-color:#999!important;color:#000!important}
+.card.c-CRITICAL b{color:#b00020!important}.card.c-HIGH b{color:#c2410c!important}.card.c-MEDIUM b{color:#9a6700!important}.card.c-LOW b{color:#1d4ed8!important}.card.c-INFORMATIONAL b{color:#555!important}
+th,h2,h3,h4,code,.risk,.note,header.top h1,header.top p,footer{color:#000!important}
+a{color:#0645ad!important}
+.bar{background:#ddd!important}
+th,td{border-color:#ccc!important}
+}
 </style></head><body><div class="wrap">
 <header class="top"><h1>DOXA WEB SECURITY AUDITOR</h1><p>Security assessment report &mdash; @@TARGET@@</p></header>
 @@BODY@@

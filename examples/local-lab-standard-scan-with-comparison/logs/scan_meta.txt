@@ -1,0 +1,6 @@
+doxa_version=2.1.0
+target=http://127.0.0.1:18092
+host=127.0.0.1
+port=18092
+mode=standard
+started=2026-11-17T11:52:42Z

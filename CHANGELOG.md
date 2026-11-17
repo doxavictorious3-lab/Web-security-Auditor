@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.1.0 (Stage 2) - 2026-11-16
+
+### New modules
+- **js**: JavaScript discovery and analysis (endpoints, redacted secret indicators, http:// references, Subresource Integrity, source maps, dangerous patterns, library bundles skipped).
+- **api**: GET-only API discovery and assessment (OpenAPI/Swagger, GraphQL introspection, CORS, unauthenticated-access indicators, verbose errors, Basic auth over HTTP).
+- **dns**: DNS records and basic configuration checks (SPF, DMARC, CAA, nameservers, wildcard), wordlist and certificate subdomain discovery, takeover indicators, approval-gated zone transfer, opt-in subfinder.
+
+### Reporting
+- Scan comparison (`--compare auto|DIR`): new, resolved, persistent, severity-changed and not-re-tested findings; included in HTML, TXT, JSON and `comparison.csv`.
+- PDF export (`report.pdf`) via chromium, wkhtmltopdf or weasyprint, validated after rendering; skipped or failed renders are recorded.
+- "Discovered assets" section (subdomains, API endpoints, JavaScript files and endpoints); JSON `assets`, `comparison` and `reports` objects.
+- OWASP mapping extended (A01 indicators, A07 hard-coded secrets, A08 integrity, A02 mixed content).
+
+### Safety
+- curl runs with `--globoff` so `{}` and `[]` in scraped endpoint strings are never expanded into extra requests.
+- The comparison never calls a finding resolved when the module that produced it did not run successfully.
+- Secret *values* from JavaScript are never stored, logged or printed (type, location, length and short hash only).
+
+### Testing
+- Lab server extended with JavaScript, API, GraphQL, source-map and request-log support; fake `dig` fixture for the DNS logic.
+
 ## 2.0.1 - fixes from the first real-world scan (DVWA on Kali)
 
 - **Nuclei module failed (exit 2).** `nuclei -h | grep -q -jsonl` ran under `set -o pipefail`; `grep -q` exits early, nuclei receives SIGPIPE, the pipeline reports failure, and DOXA fell back to the invalid `-json` flag. The help text is now captured before matching (`nuclei_json_flag`); the same pattern was removed from the TLS and HTTP modules. Failure details now include the last lines of the tool log.
@@ -44,7 +65,7 @@
 - Report ids were assigned inconsistently; ids are now assigned after severity sorting.
 
 ### Testing
-- `tests/run_tests.sh`: 141 checks against a local lab server (see README).
+- `tests/run_tests.sh`: 221 checks against a local lab server (see README).
 
 ### Pending (next stages)
 - Stage 2: JavaScript analysis, API assessment, DNS/subdomain checks, scan comparison, PDF export.

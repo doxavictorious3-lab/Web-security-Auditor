@@ -26,7 +26,7 @@ free_port() { python3 -c 'import socket;s=socket.socket();s.bind(("127.0.0.1",0)
 HP=$(free_port); SP=$(free_port)
 openssl req -x509 -newkey rsa:2048 -nodes -keyout "$W/key.pem" -out "$W/cert.pem" -subj "/CN=localhost" \
   -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" -days 2 >/dev/null 2>&1
-python3 "$HERE/lab_server.py" --http-port "$HP" --https-port "$SP" --cert "$W/cert.pem" --key "$W/key.pem" >"$W/server.log" 2>&1 &
+python3 "$HERE/lab_server.py" --http-port "$HP" --https-port "$SP" --cert "$W/cert.pem" --key "$W/key.pem" --request-log "$W/req.log" >"$W/server.log" 2>&1 &
 SRV_PID=$!
 RP=$(free_port)
 python3 "$HERE/lab_server.py" --http-port "$RP" --root-redirect >"$W/server2.log" 2>&1 &
@@ -215,7 +215,7 @@ import json;d=json.load(open('$OUTDIR/findings.json'))
 print(all(f['owasp_category'] and 'cvss' in f and f['impact'] and f['id'].startswith('DOXA-') for f in d['findings']))")" "True"
 assert_true "HTML contains no raw injected script/img tags" bash -c "! grep -q '<script>alert\|<img src=x' '$OUTDIR/report.html'"
 assert_true "HTML contains escaped title" grep -q '&lt;script&gt;alert(1)&lt;/script&gt;' "$OUTDIR/report.html"
-assert_true "HTML has all 13 numbered sections" test "$(grep -c '<h2[^>]*>[0-9]*\. ' "$OUTDIR/report.html")" -eq 13
+assert_true "HTML has all numbered sections (>= 15)" test "$(grep -c '<h2[^>]*>[0-9]*\. ' "$OUTDIR/report.html")" -ge 15
 assert_true "HTML is well formed (balanced tags)" python3 - "$OUTDIR/report.html" <<'EOF'
 import sys
 from html.parser import HTMLParser
@@ -317,6 +317,225 @@ reset_env; CURRENT_MODULE=unit
 add_finding "Directory listing enabled" "http://x/config/" "Information disclosure" MEDIUM "Confirmed vulnerability" "d" "e" "curl" High "r" >/dev/null
 assert_true "finding_exists matches despite trailing slash" finding_exists "Directory listing enabled" "http://x/config" "Information disclosure"
 assert_false "finding_exists is false for other URLs" finding_exists "Directory listing enabled" "http://x/other" "Information disclosure"
+
+# =============================================================================================
+section "Stage 2: JavaScript analysis"
+JD="$W/js_out"; mkdir -p "$JD"
+: >"$W/req.log"
+"$ROOT/doxa.sh" --target "http://127.0.0.1:$HP" --mode custom --modules recon,js --authorized --no-color -o "$JD" --rate 500 >"$W/js1.log" 2>&1
+DJ=$(ls -dt "$JD"/127.0.0.1_"$HP"_* | head -1)
+for t in "AWS access key ID" "Stripe live secret key" "JSON Web Token" "Google API key" "Hard-coded credential assignment"; do
+  assert_true "secret pattern flagged: $t" grep -q "Possible $t in client-side code (app.js)" "$DJ/report.txt"
+done
+assert_false "secret values never appear in any output file" grep -rqE "AKIAABCDEFGHIJKLMNOP|sk_live_abcdefghijklmnop1234|S3cr3tPassw0rd|eyJhbGciOiJIUzI1NiJ9|AIzaSyA1234567890" "$DJ"
+assert_eq "placeholder credential (YOUR_API_KEY_HERE) is ignored" "$(grep -c 'Hard-coded credential assignment at byte offset' "$DJ/report.txt")" "1"
+assert_true "evidence shows length and hash only" grep -q "characters, sha256 prefix" "$DJ/report.txt"
+assert_true "API endpoints extracted from JavaScript" bash -c "grep -qx '/api/Challenges' '$DJ/logs/js_endpoints.txt' && grep -qx '/rest/user/login' '$DJ/logs/js_endpoints.txt'"
+assert_false "static assets are not listed as endpoints" grep -q "logo.png" "$DJ/logs/js_endpoints.txt"
+assert_true "DOM XSS indicator (source + sink) flagged for manual verification" grep -q "Potential DOM-based XSS pattern" "$DJ/report.txt"
+assert_true "library bundle skipped for pattern checks" grep -q "library bundle" "$DJ/logs/js_files.txt"
+assert_false "no dangerous-pattern finding for the jQuery bundle" grep -qE "dangerous JavaScript patterns \(jquery" "$DJ/report.txt"
+assert_true "http:// reference on an HTTP site is informational only" grep -q "\[INFORMATIONAL\] DOXA-[0-9]*  http:// references in JavaScript" "$DJ/report.txt"
+assert_true "missing Subresource Integrity reported" grep -q "Third-party scripts loaded without Subresource Integrity" "$DJ/report.txt"
+assert_true "SRI evidence lists lib.js" grep -q "cdn.example.org/lib.js" "$DJ/report.txt"
+assert_false "script that has an integrity attribute is not listed" grep -q "sri.js" "$DJ/report.txt"
+assert_true "exposed source map found with CVSS 5.3" python3 -c "
+import json;d=json.load(open('$DJ/findings.json'))
+f=[x for x in d['findings'] if 'source map' in x['title']];assert f and f[0]['cvss']['score']==5.3 and f[0]['classification']=='Confirmed vulnerability'"
+assert_true "third-party scripts were not fetched (scope)" python3 -c "
+import json;d=json.load(open('$DJ/findings.json'));assert d['assessment']['scope']['out_of_scope_requests_blocked']==0"
+assert_false "no request ever left the approved origin" grep -q "example.org" "$W/req.log"
+"$ROOT/doxa.sh" --target "https://127.0.0.1:$SP" --mode custom --modules recon,js --authorized --no-color -o "$JD" --rate 500 --ca-cert "$W/cert.pem" >"$W/js2.log" 2>&1
+DJ2=$(ls -dt "$JD"/127.0.0.1_"$SP"_* | head -1)
+assert_true "on HTTPS, http:// references are a MEDIUM finding" grep -q "\[MEDIUM\] DOXA-[0-9]*  Insecure http:// references in JavaScript" "$DJ2/report.txt"
+assert_true "on HTTPS, a script over http:// is active mixed content" grep -q "Script loaded over insecure HTTP on an HTTPS page" "$DJ2/report.txt"
+
+# =============================================================================================
+section "Stage 2: API assessment (GET-only, non-destructive)"
+AD="$W/api_out"; mkdir -p "$AD"; : >"$W/req.log"
+"$ROOT/doxa.sh" --target "http://127.0.0.1:$HP" --mode custom --modules recon,js,api --authorized --no-color -o "$AD" --rate 500 >"$W/api1.log" 2>&1
+DA=$(ls -dt "$AD"/127.0.0.1_"$HP"_* | head -1)
+assert_eq "only GET requests were sent" "$(cut -d' ' -f1 "$W/req.log" | sort -u | tr '\n' ' ')" "GET "
+assert_true "OpenAPI/Swagger document found" grep -q "API documentation publicly accessible" "$DA/report.txt"
+assert_true "missing authentication scheme in the API description noted" grep -q "OpenAPI document declares no authentication scheme" "$DA/report.txt"
+assert_true "GraphQL introspection detected" grep -q "GraphQL introspection enabled" "$DA/report.txt"
+assert_true "reflective CORS on the API (HIGH, potential)" python3 -c "
+import json;d=json.load(open('$DA/findings.json'))
+f=[x for x in d['findings'] if x['title'].startswith('API CORS reflects')];assert f and f[0]['severity']=='HIGH' and f[0]['classification']=='Potential vulnerability'"
+assert_true "sensitive-looking unauthenticated endpoint flagged as potential only" python3 -c "
+import json;d=json.load(open('$DA/findings.json'))
+f=[x for x in d['findings'] if 'sensitive API endpoint' in x['title'] and '/api/users' in x['title']];assert f and f[0]['classification']=='Potential vulnerability' and f[0]['owasp_category'].startswith('A01')"
+assert_true "evidence has field names only" grep -q "field names: .*email" "$DA/report.txt"
+assert_false "API response values never stored" grep -rq "admin@x.test" "$DA"
+assert_true "stack trace disclosure confirmed with CVSS" python3 -c "
+import json;d=json.load(open('$DA/findings.json'))
+f=[x for x in d['findings'] if x['title'].startswith('Verbose error')];assert f and f[0]['cvss']['score']==5.3"
+assert_true "HTTP Basic over cleartext HTTP found" grep -q "HTTP Basic authentication offered over unencrypted HTTP" "$DA/report.txt"
+assert_false "templated endpoints (/api/users/{id}) are not probed" grep -q "{" "$DA/logs/api_endpoints.txt"
+assert_true "api endpoint inventory written" test -s "$DA/logs/api_endpoints.txt"
+assert_true "authorization limitation documented" grep -q "authorization (IDOR/BOLA)" "$DA/report.txt"
+assert_true "api module is skipped in passive mode" bash -c "grep -qP '^api\tSKIPPED\t0\tnot part of' '$E2E'/127.0.0.1_${HP}_*/logs/modules.tsv"
+
+# =============================================================================================
+section "Stage 2: DNS and subdomain indicators (fake dig fixture)"
+mkdir -p "$W/fakedig"
+cat >"$W/fakedig/dig" <<'FAKEDIG'
+#!/usr/bin/env bash
+data=${DNS_FIXTURE:?}; short=0; comments=0; server=""; args=()
+for a in "$@"; do case $a in +short) short=1 ;; +comments) comments=1 ;; +*) ;; @*) server=${a#@} ;; *) args+=("$a") ;; esac; done
+name=${args[0]:-}; type=${args[1]:-A}
+echo "$name $type $server" >>"${DNS_LOG:-/dev/null}"
+if [[ $type == AXFR ]]; then
+  if grep -q "^axfr|$name|" "$data"; then grep "^axfr|$name|" "$data" | cut -d'|' -f3; else echo "; Transfer failed."; fi; exit 0
+fi
+if (( comments )); then st=$(grep "^status|$name|" "$data" | cut -d'|' -f3); echo ";; ->>HEADER<<- opcode: QUERY, status: ${st:-NOERROR}, id: 1"; exit 0; fi
+out=$(grep -F "$name|$type|" "$data" | grep "^$name|$type|" | cut -d'|' -f3)
+if [[ -z $out && $type == A ]]; then
+  wz=$(grep '^wildcard|' "$data" | cut -d'|' -f2); wi=$(grep '^wildcard|' "$data" | cut -d'|' -f3)
+  if [[ -n $wz && $name == *".$wz" ]] && ! grep -q "|CNAME|" <(grep "^$name|" "$data"); then out=$wi; fi
+fi
+printf '%s\n' "$out" | grep -v '^$'
+exit 0
+FAKEDIG
+chmod +x "$W/fakedig/dig"
+cat >"$W/dns.fixture" <<'FIX'
+app.example.test|A|10.0.0.5
+app.example.test|NS|ns1.example.test.
+app.example.test|MX|10 mail.example.test.
+app.example.test|TXT|"v=spf1 +all"
+app.example.test|SOA|ns1.example.test. admin.example.test. 1 2 3 4 5
+dev.app.example.test|A|10.0.0.6
+old.app.example.test|A|abandoned.github.io.
+old.app.example.test|CNAME|abandoned.github.io.
+blog.app.example.test|A|zzz.unknown-provider.net.
+blog.app.example.test|CNAME|zzz.unknown-provider.net.
+ghost.app.example.test|A|foo.herokuapp.com.
+ghost.app.example.test|CNAME|foo.herokuapp.com.
+foo.herokuapp.com|A|54.1.2.3
+status|abandoned.github.io|NXDOMAIN
+status|zzz.unknown-provider.net|NXDOMAIN
+axfr|app.example.test|app.example.test. 3600 IN SOA ns1.example.test. a.b. 1 2 3 4 5
+axfr|app.example.test|www.app.example.test. 3600 IN A 10.0.0.7
+axfr|app.example.test|secret.app.example.test. 3600 IN A 10.0.0.8
+axfr|app.example.test|app.example.test. 3600 IN SOA ns1.example.test. a.b. 1 2 3 4 5
+FIX
+run_dns_case() { # MODE [wildcard]
+  reset_env; CURRENT_MODULE=dns; MODE=$1; IS_IP=0; HOST=app.example.test; PORT=""; HOST_URL=$HOST; SCAN_BASE="http://$HOST"
+  SCOPE_HOSTS=(app.example.test); SCOPE_PORTS=(80); RATE=1000
+  cp "$W/dns.fixture" "$W/dns.case"; [[ -n ${2:-} ]] && echo "wildcard|app.example.test|10.9.9.9" >>"$W/dns.case"
+  export DNS_FIXTURE="$W/dns.case" DNS_LOG="$W/dns.queries"; : >"$DNS_LOG"
+  PATH="$W/fakedig:$PATH" run_dns >/dev/null 2>&1; DNS_RC=$?
+  IPS=(10.0.0.5); START_EPOCH=$(date +%s); report_prepare
+}
+run_dns_case standard
+assert_eq "run_dns completes" "$DNS_RC" "0"
+assert_true "SPF +all is a confirmed finding" grep -q "SPF record allows any sender (+all)" "$FINAL_TSV"
+assert_true "mail-enabled host without DMARC noted as potential" bash -c "grep -q 'without DMARC record' '$FINAL_TSV'"
+assert_true "single nameserver noted" grep -q "Only one authoritative nameserver" "$FINAL_TSV"
+assert_true "missing CAA noted as informational" grep -q "No CAA record published" "$FINAL_TSV"
+assert_true "subdomains found by wordlist" bash -c "grep -q '^dev.app.example.test' '$LOG_DIR/subdomains.txt' && grep -q '^old.app.example.test' '$LOG_DIR/subdomains.txt'"
+assert_true "GitHub Pages dangling CNAME = takeover INDICATOR (potential)" bash -c "awk -F'\037' '\$4 ~ /Subdomain takeover indicator: old.app.example.test/ {print \$7}' '$FINAL_TSV' | grep -q 'Potential vulnerability'"
+assert_true "unknown-provider dangling CNAME is a low-severity potential finding" bash -c "awk -F'\037' '\$4 ~ /Dangling CNAME record: blog/ {print \$3\$7}' '$FINAL_TSV' | grep -q 'LOWPotential vulnerability'"
+assert_false "resolving CNAME to a provider is not flagged (and no HTTP request was made)" grep -q "ghost.app.example.test ->" "$FINAL_TSV"
+assert_false "no takeover finding is ever 'Confirmed'" bash -c "awk -F'\037' '\$4 ~ /takeover/ {print \$7}' '$FINAL_TSV' | grep -q Confirmed"
+assert_false "zone transfer is not attempted outside full mode" grep -q " AXFR " "$DNS_LOG"
+assert_false "only names under the approved host (or CNAME targets) were queried" bash -c "grep -vE 'app.example.test|abandoned.github.io|zzz.unknown-provider.net|foo.herokuapp.com' '$DNS_LOG' | grep -q ."
+run_dns_case passive
+assert_false "passive mode performs no wordlist enumeration" test -s "$LOG_DIR/subdomains.txt"
+limits_have() { printf '%s\n' "${LIMITS[@]}" | grep -q "$1"; }
+assert_true "passive limitation recorded" limits_have "Passive mode: subdomain enumeration"
+run_dns_case standard wildcard
+assert_true "wildcard DNS detected and filtered" grep -q "Wildcard DNS record detected" "$FINAL_TSV"
+assert_eq "wildcard-only answers do not create subdomains (only dev, old, blog remain)" "$(cut -f1 "$LOG_DIR/subdomains.txt" | tr '\n' ' ')" "blog.app.example.test dev.app.example.test old.app.example.test "
+ALLOW_DANGEROUS=0; run_dns_case full
+assert_false "zone transfer needs approval (not run, non-interactive)" grep -q "zone transfer (AXFR) permitted" "$FINAL_TSV"
+assert_true "denied approval recorded as a limitation" limits_have "AXFR"
+ALLOW_DANGEROUS=1; run_dns_case full
+assert_true "approved zone transfer reported as HIGH with CVSS 5.3 and no zone content stored" bash -c "awk -F'\037' '\$4 ~ /zone transfer/ {print \$3\"|\"\$13}' '$FINAL_TSV' | grep -qx 'HIGH|5.3'"
+assert_false "zone contents are not stored" grep -rq "secret.app.example.test" "$OUTDIR"
+ALLOW_DANGEROUS=0
+unset DNS_FIXTURE DNS_LOG
+# IP targets: nothing to inspect
+reset_env; IS_IP=1; HOST=127.0.0.1; run_dns >/dev/null 2>&1; assert_eq "IP target skips the dns module" "$MODULE_STATUS" "SKIPPED"
+
+# =============================================================================================
+section "Stage 2: scan comparison"
+mk_scan() { # dir ; findings from stdin as "title|url|sev|module"
+  reset_env; CURRENT_MODULE=unit
+  local t u sv m
+  while IFS='|' read -r t u sv m; do CURRENT_MODULE=$m; add_finding "$t" "$u" "Security headers" "$sv" "Confirmed vulnerability" d e t High r >/dev/null; done
+  IPS=(127.0.0.1); START_EPOCH=$(date +%s); HOST=lab.test; report_prepare
+}
+rm -rf "$W/cmp_prev"; mkdir -p "$W/cmp_prev/logs"
+mk_scan <<'EOF2'
+A header|http://lab.test/|HIGH|http
+B header|http://lab.test/|MEDIUM|http
+C nikto item|http://lab.test/c|LOW|nikto
+D gobuster item|http://lab.test/d|LOW|gobuster
+EOF2
+cp "$LOG_DIR/findings.final.tsv" "$W/cmp_prev/logs/"; printf 'http\tOK\t1\tx\nnikto\tOK\t1\tx\ngobuster\tOK\t1\tx\n' >"$W/cmp_prev/logs/modules.tsv"
+printf 'host=lab.test\ntarget=http://lab.test\n' >"$W/cmp_prev/logs/scan_meta.txt"
+mk_scan <<'EOF2'
+A header|http://lab.test/|HIGH|http
+B header|http://lab.test/|LOW|http
+E new header|http://lab.test/e|MEDIUM|http
+EOF2
+printf 'http\tOK\t1\tx\nnikto\tSKIPPED\t0\tnot installed\ngobuster\tOK\t1\tx\n' >"$MODULES_TSV"
+COMPARE_SPEC="$W/cmp_prev"; OUTPUT_ROOT="$W"; compare_scans
+assert_eq "counts: new, resolved, persistent, changed, not re-tested" "$CMP_NEW|$CMP_RESOLVED|$CMP_PERSISTENT|$CMP_CHANGED|$CMP_NOTRETESTED" "1|1|1|1|1"
+assert_true "severity change recorded with both severities" grep -qP '^CHANGED\t[^\t]+\tLOW\tMEDIUM\tB header' "$CMP_FILE"
+assert_true "finding of a module that did not run is NOT called resolved" grep -qP '^NOT_RETESTED\t.*C nikto item' "$CMP_FILE"
+assert_true "finding of a module that ran OK and no longer reports it is resolved" grep -qP '^RESOLVED\t.*D gobuster item' "$CMP_FILE"
+HOST=other.test; compare_scans; assert_eq "comparison refuses a different host" "$COMPARE_DONE" "0"
+assert_true "refusal reason is explained" grep -q "previous scan was for host" <<<"$COMPARE_ERROR"
+COMPARE_SPEC="/nonexistent/dir"; HOST=lab.test; compare_scans; assert_eq "missing previous directory is reported" "$COMPARE_DONE|$([[ -n $COMPARE_ERROR ]] && echo err)" "0|err"
+COMPARE_SPEC=""
+
+CD="$W/cmp"; mkdir -p "$CD"
+"$ROOT/doxa.sh" --target "http://127.0.0.1:$HP" --mode custom --modules recon,http,js,api --authorized --no-color -o "$CD" --rate 500 >"$W/cmp1.log" 2>&1; sleep 1.2
+"$ROOT/doxa.sh" --target "http://127.0.0.1:$HP" --mode custom --modules recon,http,js,api --authorized --no-color -o "$CD" --rate 500 --compare auto >"$W/cmp2.log" 2>&1
+DC=$(ls -dt "$CD"/127.0.0.1_"$HP"_* | head -1)
+assert_true "--compare auto finds the previous scan and reports no changes" python3 -c "
+import json;c=json.load(open('$DC/findings.json'))['comparison'];assert c['enabled'] and c['new']==0 and c['resolved']==0 and c['severity_changed']==0 and c['persistent']>10, c"
+assert_true "comparison appears in the HTML report" grep -q "15. Comparison with previous scan" "$DC/report.html"
+assert_true "comparison appears in the TXT report" grep -q "11. COMPARISON WITH PREVIOUS SCAN" "$DC/report.txt"
+assert_true "comparison.csv written" test -s "$DC/comparison.csv"
+assert_true "comparison shown in the terminal summary" grep -q "Compared : new 0, resolved 0" "$W/cmp2.log"
+"$ROOT/doxa.sh" --target "http://127.0.0.1:$HP" --mode custom --modules recon --authorized --no-color -o "$W/cmp_first" --rate 500 --compare auto >"$W/cmp3.log" 2>&1
+DC3=$(ls -dt "$W/cmp_first"/127.0.0.1_"$HP"_* | head -1)
+assert_true "--compare auto without a previous scan degrades gracefully" grep -q "Scan comparison was requested but is unavailable" "$DC3/report.txt"
+
+# =============================================================================================
+section "Stage 2: PDF export"
+if have wkhtmltopdf && have pdftotext; then
+  assert_true "report.pdf produced by the standard scan (wkhtmltopdf)" bash -c "head -c 5 '$D/report.pdf' | grep -q '%PDF-'"
+  assert_true "PDF is readable and has pages" python3 -c "
+from pypdf import PdfReader;r=PdfReader('$D/report.pdf');assert len(r.pages)>=1"
+  assert_true "PDF text contains branding and findings" bash -c "pdftotext '$D/report.pdf' - | grep -q 'DOXA' && pdftotext '$D/report.pdf' - | grep -qi 'Exposed environment file'"
+  assert_false "no secret values inside the PDF" bash -c "pdftotext '$D/report.pdf' - | grep -qE 'hunter2hunter2|SECRETVALUE123'"
+  assert_true "PDF hashed in reports.sha256" grep -q "report.pdf" "$D/logs/reports.sha256"
+else
+  note "real PDF rendering test skipped (wkhtmltopdf and pdftotext not both installed)"
+fi
+pdf_case() { reset_env; OUTDIR="$W/pdfcase"; rm -rf "$OUTDIR"; mkdir -p "$OUTDIR/logs"; LOG_DIR="$OUTDIR/logs"; MAIN_LOG="$LOG_DIR/doxa.log"; TOOLS_TSV="$LOG_DIR/tools.tsv"; echo "<html><body>x</body></html>" >"$OUTDIR/report.html"; PDF_STATUS=""; PDF_TOOL=""; NO_PDF=0; }
+mkdir -p "$W/fakepdf"
+cat >"$W/fakepdf/chromium" <<'FAKECHROMIUM'
+#!/bin/sh
+for a in "$@"; do case $a in --print-to-pdf=*) f=${a#--print-to-pdf=}; printf '%s\n' '%PDF-1.4' 'fake' >"$f";; esac; done
+exit 0
+FAKECHROMIUM
+printf '#!/bin/sh\necho "render error" >&2\nexit 1\n' >"$W/fakepdf/chromium-broken"
+chmod +x "$W/fakepdf/"*
+pdf_case; PATH="$W/fakepdf:$PATH" pdf_tool_detect; PATH="$W/fakepdf:$PATH" generate_pdf_report
+assert_eq "chromium path: valid PDF accepted" "$PDF_STATUS" "generated with chromium"
+pdf_case; cp "$W/fakepdf/chromium-broken" "$W/fakepdf/chromium"; PATH="$W/fakepdf:$PATH" pdf_tool_detect; PATH="$W/fakepdf:$PATH" generate_pdf_report 2>/dev/null
+assert_true "failed render is reported, never silent" grep -q "^failed" <<<"$PDF_STATUS"
+assert_false "invalid output file is removed" test -e "$OUTDIR/report.pdf"
+mkdir -p "$W/nopdf"; for f in /usr/bin/* /bin/*; do b=$(basename "$f"); case $b in chromium*|google-chrome*|wkhtmltopdf|weasyprint) continue ;; esac; [[ -e $W/nopdf/$b ]] || ln -s "$f" "$W/nopdf/$b" 2>/dev/null; done
+pdf_case; PATH="$W/nopdf" pdf_tool_detect
+assert_true "no PDF tool: skipped with a recorded limitation" bash -c "grep -q '^skipped' <<<'$PDF_STATUS'"
+pdf_case; NO_PDF=1; pdf_tool_detect; assert_eq "--no-pdf honoured" "$PDF_STATUS" "disabled (--no-pdf)"
+NO_PDF=0
 
 # =============================================================================================
 section "Interrupted scan"

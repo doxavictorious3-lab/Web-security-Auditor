@@ -36,6 +36,11 @@ owasp_for() { # category title
     "Security headers"|"Security misconfiguration"|"Information disclosure"|"Sensitive file exposure"|"Exposed network service"|"Attack surface"|"API security"|"JavaScript security"|"DNS configuration")
       printf 'A05:2021 Security Misconfiguration' ;;
     "Subdomain takeover indicators") printf 'A05:2021 Security Misconfiguration' ;;
+    "JavaScript secrets"|"API authentication") printf 'A07:2021 Identification and Authentication Failures' ;;
+    "JavaScript dangerous patterns") printf 'A03:2021 Injection' ;;
+    "JavaScript integrity") printf 'A08:2021 Software and Data Integrity Failures' ;;
+    "Mixed content") printf 'A02:2021 Cryptographic Failures' ;;
+    "API access control indicators") printf 'A01:2021 Broken Access Control' ;;
     *) printf 'Not mapped (informational)' ;;
   esac
 }
@@ -53,6 +58,15 @@ impact_for() { # category severity
     "Injection indicators"|"Cross-Site Scripting indicators"|"SQL injection indicators") printf 'If confirmed, attackers could run script in victims browsers or manipulate backend queries. Manual verification is required.' ;;
     "Security misconfiguration") printf 'Weak configuration may expose unnecessary functionality or information.' ;;
     "Attack surface") printf 'Exposed administrative or sensitive interfaces are attractive targets for credential attacks.' ;;
+    "JavaScript secrets") printf 'Credentials or tokens embedded in client-side code are readable by every visitor and may allow access to backend or third-party services if they are valid.' ;;
+    "JavaScript dangerous patterns") printf 'Unsafe DOM and code-evaluation patterns can turn attacker-controlled input into script execution (XSS) if the data flow is reachable. Manual review is required.' ;;
+    "JavaScript integrity") printf 'A compromised third-party script host could run arbitrary code in your users browsers.' ;;
+    "Mixed content") printf 'Resources fetched over plain HTTP can be modified by a network attacker, undermining the security of the HTTPS page that loads them.' ;;
+    "API access control indicators") printf 'Data or functions may be reachable without authentication. Object-level authorization cannot be assessed without credentials and needs manual testing.' ;;
+    "API authentication") printf 'Credentials may be exposed to network attackers or guessed more easily.' ;;
+    "API security") printf 'API weaknesses can expose data or internals to unauthenticated clients and browsers.' ;;
+    "DNS configuration") printf 'DNS or email-authentication weaknesses can enable spoofing, takeover or information disclosure.' ;;
+    "Subdomain takeover indicators") printf 'If the dangling resource can be claimed by a third party, an attacker could serve content from your domain. DOXA did not attempt a takeover.' ;;
     *) printf 'No direct security impact; the observation provides context for the assessment.' ;;
   esac
 }

@@ -33,12 +33,12 @@ ${C_BOLD}Scan profiles (--mode):${C_RESET}
   full        Full non-destructive assessment: deeper scans + parameter indicator probing
               (probing and default-login checks need approval)
   custom      Choose modules with --modules a,b,c
-  Active modules: nmap gobuster nikto nuclei params; passive modules: recon whatweb http tls evidence
+  Active modules: nmap api gobuster nikto nuclei params (+ the dns subdomain wordlist); passive: recon whatweb http tls dns js evidence
 
 ${C_BOLD}Options:${C_RESET}
   -u, --target URL       Target, e.g. https://example.com  (IPv4, [IPv6], hostnames, ports supported)
   -m, --mode NAME        passive | standard | full | custom
-      --modules LIST     Modules for --mode custom: recon,nmap,whatweb,http,tls,gobuster,nikto,nuclei,params,evidence
+      --modules LIST     Modules for --mode custom: recon,nmap,whatweb,http,tls,dns,js,api,gobuster,nikto,nuclei,params,evidence
       --skip LIST        Modules to skip
   -o, --output DIR       Report root directory (default: ./reports_out)
   -t, --threads N        Concurrency for gobuster/nuclei (1-100)
@@ -52,8 +52,12 @@ ${C_BOLD}Options:${C_RESET}
       --ca-cert FILE     Trust this CA file for HTTPS (lab CAs). Certificates are verified by default
       --insecure-tls-diagnostic
                          DISABLE certificate verification. Authorized diagnostics only; recorded in the report
-      --allow-dangerous  Pre-approve checks that otherwise ask for approval
+      --allow-dangerous  Pre-approve checks that otherwise ask (parameter probing, nuclei default-login, DNS zone transfer)
       --oast             Allow Nuclei out-of-band (interactsh) checks (contacts a third-party server)
+      --compare SPEC     Compare with a previous scan: a report directory, or "auto" (latest earlier scan of this host)
+      --no-pdf           Do not create report.pdf (needs chromium, wkhtmltopdf or weasyprint)
+      --dns-passive-sources
+                         Let the dns module use subfinder third-party passive sources (sends the domain name to external services)
       --check-tools      Show dependency status
       --no-color  -v/--verbose  -h/--help  --version
 
@@ -93,6 +97,11 @@ show_summary() {
   printf '  Mode     : %s    Duration: %s    TLS verification: %s\n' "$MODE" "$(fmt_dur "$DURATION")" "$( ((INSECURE_TLS)) && echo DISABLED || echo enabled )"
   printf '  Scope    : %s requests blocked as out-of-scope\n' "$SCOPE_OOS_COUNT"
   printf '  Findings : %s total (overall risk: %s, %s CVSS-scored)\n' "$TOTAL" "$OVERALL_RISK" "$CVSS_SCORED"
+  if (( COMPARE_DONE )); then
+    printf '  Compared : new %s, resolved %s, persistent %s, severity changed %s, not re-tested %s (vs %s)\n' "$CMP_NEW" "$CMP_RESOLVED" "$CMP_PERSISTENT" "$CMP_CHANGED" "$CMP_NOTRETESTED" "$(basename "$COMPARE_DIR")"
+  elif [[ -n $COMPARE_SPEC ]]; then
+    printf '  Compared : unavailable (%s)\n' "$COMPARE_ERROR"
+  fi
   for s in "${SEVERITIES[@]}"; do n="CNT_$s"; printf '    %s %s\n' "$(sev_tag "$s")" "${!n}"; done
   printf '\n  Modules:\n'
   if [[ -s ${MODULES_TSV:-/dev/null} ]]; then
@@ -102,7 +111,7 @@ show_summary() {
     done <"$MODULES_TSV"
   fi
   printf '\n  Report directory : %s%s%s\n' "$C_CYAN" "$OUTDIR" "$C_RESET"
-  printf '    report.html  report.txt  findings.json  findings.csv  reconnaissance.txt  logs/\n'
+  printf '    report.html  report.txt  findings.json  findings.csv  reconnaissance.txt  logs/\n    PDF: %s\n' "${PDF_STATUS:-not attempted}"
   printf '%s============================================================================%s\n' "$C_GREEN" "$C_RESET"
   (( MODULE_PROBLEMS )) && warn "$MODULE_PROBLEMS module(s) failed, timed out or were interrupted - see the report limitations section."
   return 0

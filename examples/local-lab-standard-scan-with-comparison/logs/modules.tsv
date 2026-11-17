@@ -1,0 +1,13 @@
+recon	OK	1	HTTP=1 HTTPS=0 server=LabServer/1.2.3 
+nmap	SKIPPED	0	required tool not installed: nmap
+whatweb	SKIPPED	0	required tool not installed: whatweb
+http	OK	1	18 findings
+tls	SKIPPED	0	no HTTPS endpoint detected
+dns	SKIPPED	0	required tool not installed: dig
+js	OK	1	2 script file(s) analysed, 3 external not fetched, 7 endpoint string(s)
+api	OK	1	30 path(s) probed: 7 open, 1 protected, 11 finding(s)
+gobuster	SKIPPED	0	required tool not installed: gobuster
+nikto	SKIPPED	0	required tool not installed: nikto
+nuclei	SKIPPED	0	required tool not installed: nuclei
+params	SKIPPED	0	not part of the 'standard' profile
+evidence	SKIPPED	0	no screenshot tool (install chromium); headers and page body archived

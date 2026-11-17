@@ -1,0 +1,2 @@
+http://127.0.0.1:18092/static/app.js	HTTP 200	790 bytes
+http://127.0.0.1:18092/static/lib/jquery.min.js	HTTP 200	93 bytes, library bundle (pattern checks skipped)

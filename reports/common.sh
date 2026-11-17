@@ -62,15 +62,19 @@ report_limitations() { # prints one limitation per line
   } | awk '!seen[$0]++'
 }
 
+report_asset() { # logs/<file> -> lines (tabs shown as " | ")
+  [[ -s $LOG_DIR/$1 ]] && sed 's/\t/ | /g' "$LOG_DIR/$1"
+  return 0
+}
 report_technologies() { sort -u "$TECH_FILE" 2>/dev/null | grep -v '^$'; }
 report_open_ports() { [[ -s $LOG_DIR/open_ports.txt ]] && cat "$LOG_DIR/open_ports.txt"; return 0; }
 
 write_hashes() { # artefact manifest (excludes reports and the append-only main log)
   ( cd "$OUTDIR" && find . -type f ! -name evidence.sha256 ! -name reports.sha256 ! -name doxa.log \
-      ! -name 'report.*' ! -name 'findings.json' ! -name 'findings.csv' -print0 \
+      ! -name 'report.*' ! -name 'findings.json' ! -name 'findings.csv' ! -name 'comparison.csv' -print0 \
       | LC_ALL=C sort -z | xargs -0 -r sha256sum >logs/evidence.sha256 ) 2>/dev/null || true
 }
 write_report_hashes() {
-  ( cd "$OUTDIR" && sha256sum logs/doxa.log report.html report.txt report.pdf findings.json findings.csv 2>/dev/null >logs/reports.sha256 ) || true
+  ( cd "$OUTDIR" && sha256sum logs/doxa.log report.html report.txt report.pdf findings.json findings.csv comparison.csv 2>/dev/null >logs/reports.sha256 ) || true
 }
 

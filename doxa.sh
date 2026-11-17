@@ -20,7 +20,7 @@ set -uo pipefail
 shopt -u patsub_replacement 2>/dev/null || true
 
 readonly DOXA_NAME="DOXA Web Security Auditor"
-readonly DOXA_VERSION="2.0.1"
+readonly DOXA_VERSION="2.1.0"
 DOXA_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DOXA_HOME
 readonly EX_OK=0 EX_USAGE=1 EX_DEPS=2 EX_MODFAIL=3 EX_HIGHRISK=4 EX_INT=130
@@ -33,11 +33,12 @@ source "$DOXA_HOME/lib/validation.sh"
 source "$DOXA_HOME/lib/scope.sh"
 source "$DOXA_HOME/lib/findings.sh"
 source "$DOXA_HOME/lib/config.sh"
+source "$DOXA_HOME/lib/compare.sh"
 source "$DOXA_HOME/lib/ui.sh"
-for _m in recon nmap whatweb http tls directories nikto nuclei params evidence; do
+for _m in recon nmap whatweb http tls dns javascript api directories nikto nuclei params evidence; do
   source "$DOXA_HOME/modules/$_m.sh"
 done
-for _r in common json txt html; do
+for _r in common json txt html pdf; do
   if [[ -r "$DOXA_HOME/reports/$_r.sh" ]]; then source "$DOXA_HOME/reports/$_r.sh"; fi
 done
 unset _m _r
@@ -58,15 +59,17 @@ INTERRUPTING=0 START_EPOCH=0 START_ISO="" END_ISO="" DURATION=0 MODULE_PROBLEMS=
 SCOPE_PORTS_DEFAULTED=1 FINDINGS_TSV="/dev/null"
 declare -A TOOL_VER=()
 declare -A MOD_FUNC=([recon]=collect_recon [nmap]=run_nmap [whatweb]=run_whatweb [http]=check_http_headers [tls]=check_tls
+                     [dns]=run_dns [js]=run_js [api]=run_api
                      [gobuster]=run_gobuster [nikto]=run_nikto [nuclei]=run_nuclei [params]=run_params [evidence]=collect_evidence)
 # Requirements: tool names, @web (verified web service reachable), @tls (HTTPS endpoint present)
 declare -A MOD_REQ=([recon]="curl" [nmap]="nmap" [whatweb]="whatweb @web" [http]="curl @web" [tls]="openssl @tls"
+                    [dns]="dig" [js]="curl @web" [api]="curl @web"
                     [gobuster]="gobuster @web" [nikto]="nikto @web" [nuclei]="nuclei @web" [params]="curl @web" [evidence]="@web")
-readonly MODULE_ORDER=(recon nmap whatweb http tls gobuster nikto nuclei params evidence)
-readonly PASSIVE_MODULES="recon whatweb http tls evidence"
+readonly MODULE_ORDER=(recon nmap whatweb http tls dns js api gobuster nikto nuclei params evidence)
+readonly PASSIVE_MODULES="recon whatweb http tls dns js evidence"
 
 REQUIRED_TOOLS=(curl awk sed grep timeout mktemp date sort md5sum sha256sum od head tr wc cut)
-OPTIONAL_TOOLS=(nmap nikto gobuster whatweb nuclei sslyze openssl dig jq)
+OPTIONAL_TOOLS=(nmap nikto gobuster whatweb nuclei sslyze openssl dig jq subfinder wkhtmltopdf weasyprint)
 
 # ---- dependency checks ------------------------------------------------------------
 # bad_version TEXT: true when a tool printed usage/error text instead of a version
@@ -115,6 +118,7 @@ check_dependencies() { # $1=1 verbose
   if (( verbose )); then
     local shot=none; for t in chromium chromium-browser google-chrome gowitness; do have "$t" && { shot=$t; break; }; done
     printf '  screenshot tool: %s\n' "$shot"
+    pdf_tool_detect; printf '  PDF tool: %s\n' "${PDF_TOOL:-none (report.pdf will be skipped)}"
     printf '\nInstall on Kali/Debian:  ./install.sh   (or: sudo apt install -y curl jq nmap nikto gobuster whatweb nuclei sslyze dnsutils openssl chromium)\n'
     printf 'Nuclei templates:        nuclei -update-templates\n'
   fi
@@ -228,11 +232,15 @@ finalize_reports() {
   END_ISO=$(now_iso)
   DURATION=$(( $(date +%s) - START_EPOCH ))
   report_prepare
+  compare_scans || true
   write_hashes
+  pdf_tool_detect
+  generate_html_report || err "HTML report failed"
+  generate_pdf_report || true
   generate_json_report || err "JSON report failed"
   generate_csv_report || err "CSV report failed"
+  generate_comparison_csv || err "comparison CSV failed"
   generate_text_report || err "TXT report failed"
-  generate_html_report || err "HTML report failed"
   write_report_hashes
 }
 
@@ -274,6 +282,9 @@ parse_args() {
       --scope-port)   need_arg "$1" $#; scope_add_port "$2" || die $EX_USAGE "$VALIDATION_ERROR"; shift 2 ;;
       --ca-cert)      need_arg "$1" $#; CA_CERT=$2; shift 2 ;;
       --insecure-tls-diagnostic) INSECURE_TLS=1; shift ;;
+      --compare)      need_arg "$1" $#; COMPARE_SPEC=$2; shift 2 ;;
+      --no-pdf)       NO_PDF=1; shift ;;
+      --dns-passive-sources) DNS_PASSIVE_SOURCES=1; shift ;;
       --authorized)   AUTHORIZED=1; shift ;;
       --allow-dangerous) ALLOW_DANGEROUS=1; shift ;;
       --oast)         USE_OAST=1; shift ;;
@@ -325,6 +336,7 @@ main() {
   init_workspace
 
   START_EPOCH=$(date +%s); START_ISO=$(now_iso)
+  scan_meta_write
   info "Target     : ${C_CYAN}${TARGET_URL}${C_RESET}  (${IPS[*]})"
   info "Scope      : hosts=[${SCOPE_HOSTS[*]}] ports=[${SCOPE_PORTS[*]}]"
   info "Profile    : ${MODE} - ${PROFILE_DESC}"

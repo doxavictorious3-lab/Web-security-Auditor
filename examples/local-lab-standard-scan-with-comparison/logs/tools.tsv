@@ -1,0 +1,1 @@
+pdf	wkhtmltopdf --quiet --enable-local-file-access --page-size A4 /tmp/lab/ex2/127.0.0.1_18092_20261117_115242/report.html /tmp/lab/ex2/127.0.0.1_18092_20261117_115242/report.pdf	0	0	logs/pdf.log

@@ -56,6 +56,25 @@ generate_json_report() {
         "$(json_str "$rem")" "$(json_str "$module")" "$(json_str "$tool")" "$(json_str "$ts")" "$(json_str "$fpn")" "$(json_str "$cat")"
     done <"$FINAL_TSV"
     printf '\n],\n"technologies":%s,\n"open_ports":%s,\n' "$(report_technologies | json_array_lines)" "$(report_open_ports | json_array_lines)"
+    printf '"assets":{"subdomains":%s,"api_endpoints":%s,"javascript_files":%s,"javascript_endpoints":%s},\n' \
+      "$(report_asset subdomains.txt | json_array_lines)" "$(report_asset api_endpoints.txt | json_array_lines)" \
+      "$(report_asset js_files.txt | json_array_lines)" "$(report_asset js_endpoints.txt | json_array_lines)"
+    printf '"comparison":'
+    if (( COMPARE_DONE )); then
+      printf '{"enabled":true,"previous_report":%s,"new":%s,"resolved":%s,"persistent":%s,"severity_changed":%s,"not_retested":%s,"items":[' \
+        "$(json_str "$COMPARE_DIR")" "$CMP_NEW" "$CMP_RESOLVED" "$CMP_PERSISTENT" "$CMP_CHANGED" "$CMP_NOTRETESTED"
+      local cs_ cid csev cprev ctitle curl cmod cfirst=1
+      while IFS=$'\t' read -r cs_ cid csev cprev ctitle curl cmod; do
+        [[ $cs_ == PERSISTENT ]] && continue
+        (( cfirst )) || printf ','; cfirst=0
+        printf '{"status":%s,"id":%s,"severity":%s,"previous_severity":%s,"title":%s,"affected_url":%s,"module":%s}' \
+          "$(json_str "$cs_")" "$(json_str "$cid")" "$(json_str "$csev")" "$(json_str "$cprev")" "$(json_str "$ctitle")" "$(json_str "$curl")" "$(json_str "$cmod")"
+      done <"$CMP_FILE"
+      printf ']},\n'
+    else
+      printf '{"enabled":false,"reason":%s},\n' "$(json_str "${COMPARE_ERROR:-not requested}")"
+    fi
+    printf '"reports":{"pdf":%s},\n' "$(json_str "${PDF_STATUS:-not attempted}")"
     printf '"modules":['
     first=1; local name mst dur detail
     while IFS=$'\t' read -r name mst dur detail; do
@@ -96,5 +115,17 @@ generate_csv_report() {
         "$(csv_field "$owasp")" "$(csv_field "$title")" "$(csv_field "$url")" "$(csv_field "$status")" "$(csv_field "$conf")" \
         "$(csv_field "$module")" "$(csv_field "$tool")" "$(csv_field "$ts")" "$(csv_field "$impact")" "$(csv_field "$rem")"
     done <"$FINAL_TSV"
+  } >"$C"
+}
+
+generate_comparison_csv() {
+  (( COMPARE_DONE )) || return 0
+  local C="$OUTDIR/comparison.csv" st id sev prev title url mod
+  {
+    printf 'status,id,severity,previous_severity,title,affected_url,module\r\n'
+    while IFS=$'\t' read -r st id sev prev title url mod; do
+      printf '%s,%s,%s,%s,%s,%s,%s\r\n' "$(csv_field "$st")" "$(csv_field "$id")" "$(csv_field "$sev")" "$(csv_field "$prev")" \
+        "$(csv_field "$title")" "$(csv_field "$url")" "$(csv_field "$mod")"
+    done <"$CMP_FILE"
   } >"$C"
 }

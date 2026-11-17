@@ -118,7 +118,7 @@ rate_wait() {
 # HTTP client. TLS certificates are VERIFIED by default.
 # ---------------------------------------------------------------------------
 build_curl_base() {
-  CURL_BASE=(-s --max-time "$CURL_TIMEOUT" --connect-timeout 8 -A "$UA" --max-redirs 0
+  CURL_BASE=(-s -g --max-time "$CURL_TIMEOUT" --connect-timeout 8 -A "$UA" --max-redirs 0
              --max-filesize 3000000 --proto '=http,https' --proto-redir '=http,https')
   [[ -n $CA_CERT ]] && CURL_BASE+=(--cacert "$CA_CERT")
   (( INSECURE_TLS )) && CURL_BASE+=(-k)

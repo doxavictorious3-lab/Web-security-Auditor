@@ -1,0 +1,7 @@
+/api/Challenges
+/api/admin/config
+/api/private
+/api/users/{id}
+/rest/products/search?q=
+/rest/user/login
+/search?q=test

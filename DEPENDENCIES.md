@@ -11,7 +11,9 @@
 | whatweb | `whatweb` module | whatweb | `whatweb` |
 | nuclei (+ templates) | `nuclei` module | nuclei | `nuclei` then `nuclei -update-templates` |
 | sslyze | optional, preferred for TLS protocol checks | tls | `sslyze` |
-| dig | optional, richer DNS output | recon | `dnsutils` |
+| dig | needed for the `dns` module | dns | `dnsutils` |
+| subfinder | optional, only with `--dns-passive-sources` | dns | `subfinder` |
+| chromium / wkhtmltopdf / weasyprint | optional, for `report.pdf` | pdf | `chromium` or `wkhtmltopdf` or `weasyprint` |
 | chromium / gowitness | optional, screenshots | evidence | `chromium` |
 | python3 | tests only (lab server, JSON/HTML validation) | tests/ | `python3` |
 

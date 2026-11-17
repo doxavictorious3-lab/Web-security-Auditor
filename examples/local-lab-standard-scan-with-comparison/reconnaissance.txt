@@ -1,0 +1,38 @@
+DOXA Web Security Auditor - Reconnaissance
+Generated : 2026-11-17 11:52:42 UTC
+Target    : http://127.0.0.1:18092
+Host      : 127.0.0.1
+Resolved  : 127.0.0.1
+
+== DNS records ==
+(target is an IP address; forward DNS skipped)
+
+== HTTP/HTTPS service detection ==
+http://127.0.0.1:18092             HTTP 200
+
+== Analysed page: http://127.0.0.1:18092/ (HTTP 200) ==
+Server header : LabServer/1.2.3 
+X-Powered-By  : PHP/5.6.40
+Content-Type  : text/html
+Page title    : DOXA Lab
+
+-- Response headers (cookie values redacted)
+HTTP/1.1 200 OK
+Server: LabServer/1.2.3 
+Date: Tue, 17 Nov 2026 11:52:42 GMT
+Content-Type: text/html
+Content-Length: 499
+Connection: close
+Set-Cookie: sid=<redacted>; Path=/
+Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+X-Powered-By: PHP/5.6.40
+
+Soft-404 baseline: HTTP 404, 22 bytes
+
+== robots.txt (accessible) ==
+User-agent: *
+Disallow: /admin/
+Disallow: /backup/
+
+== sitemap.xml (accessible, 1 entries) ==
+http://lab/a

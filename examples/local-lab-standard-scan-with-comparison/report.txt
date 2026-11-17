@@ -1,0 +1,789 @@
+==============================================================================
+  DOXA Web Security Auditor v2.1.0 - Security Assessment Report
+==============================================================================
+Target       : http://127.0.0.1:18092
+Host / IPs   : 127.0.0.1 / 127.0.0.1
+Mode         : standard   Threads: 10   Max req/s: 200
+Started      : 2026-11-17T11:52:42Z
+Finished     : 2026-11-17T11:52:46Z (4 seconds)
+Server       : LabServer/1.2.3 
+
+1. SCOPE AND AUTHORIZATION
+------------------------------------------------------------------------------
+Authorization: command-line flag (--authorized) at 2026-11-17T11:52:42Z (operator confirmed ownership or written permission)
+Approved hosts: 127.0.0.1
+Approved ports: 18092
+Out-of-scope requests blocked: 0
+TLS verification: enabled
+
+2. EXECUTIVE SUMMARY
+------------------------------------------------------------------------------
+Overall risk: High    Findings: 43    CVSS-scored: 7    Duplicates suppressed: 0
+  CRITICAL       0
+  HIGH           6
+  MEDIUM         11
+  LOW            17
+  INFORMATIONAL  9
+Classification:
+  Confirmed vulnerability                  23
+  Potential vulnerability                  13
+  Informational observation                7
+  False positive or unverified result      0
+
+3. OWASP TOP 10 (2021) MAPPING (indicative, not a compliance statement)
+------------------------------------------------------------------------------
+  A01:2021 Broken Access Control                          4
+  A02:2021 Cryptographic Failures                         3
+  A03:2021 Injection                                      1
+  A05:2021 Security Misconfiguration                      24
+  A07:2021 Identification and Authentication Failures     8
+  A08:2021 Software and Data Integrity Failures           1
+  Not mapped (informational)                              2
+
+4. TECHNOLOGIES
+------------------------------------------------------------------------------
+  - Generator: LabCMS 1.0
+  - Server: LabServer/1.2.3 
+  - X-Powered-By: PHP/5.6.40
+
+5. OPEN PORTS AND SERVICES
+------------------------------------------------------------------------------
+  (no port scan data)
+
+6. FINDINGS
+------------------------------------------------------------------------------
+
+[HIGH] DOXA-001  API CORS reflects arbitrary origin with credentials
+  Classification : Potential vulnerability   Confidence: Medium
+  Affected URL   : http://127.0.0.1:18092/api
+  OWASP          : A01:2021 Broken Access Control
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : api / curl   at 2026-11-17T11:52:46Z
+  Description    : The API reflects an untrusted Origin and allows credentials, so a malicious site could read authenticated API responses in a victim browser.
+  Impact         : A malicious website may be able to read responses from this application in a victim browser.
+  Evidence       :
+      Origin: https://doxa-cors-test.invalid -> Access-Control-Allow-Origin: https://doxa-cors-test.invalid; Access-Control-Allow-Credentials: true
+  Remediation    : Validate Origin against an explicit allow-list; never combine reflected origins with credentials.
+  False positives: Impact depends on whether the endpoint returns authenticated, sensitive data.
+
+[HIGH] DOXA-002  CORS reflects arbitrary origin with credentials
+  Classification : Potential vulnerability   Confidence: Medium
+  Affected URL   : http://127.0.0.1:18092
+  OWASP          : A01:2021 Broken Access Control
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : The server reflects an untrusted Origin and allows credentials, which can let malicious sites read authenticated responses.
+  Impact         : A malicious website may be able to read responses from this application in a victim browser.
+  Evidence       :
+      Origin: https://doxa-cors-test.invalid -> Access-Control-Allow-Origin: https://doxa-cors-test.invalid; Access-Control-Allow-Credentials: true
+  Remediation    : Validate Origin against a strict allow-list; never reflect arbitrary origins with credentials.
+  False positives: Impact depends on whether the endpoint returns sensitive, authenticated data.
+
+[HIGH] DOXA-003  Exposed Git repository metadata
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/.git/HEAD
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Repository metadata was confirmed readable without authentication; full source retrieval was not attempted, so confidentiality impact is scored Low.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : The .git directory is downloadable, allowing source code and history to be reconstructed.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      GET /.git/HEAD -> HTTP 200; content signature matched. ref: refs/heads/main
+  Remediation    : Remove the file from the web root, deny access in the web-server configuration and rotate any credentials it contained.
+  False positives: Signature matched file content. Confirm manually that this is not an intentional public file or a honeypot.
+
+[HIGH] DOXA-004  Exposed environment file (.env)
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/.env
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 7.5 (High)  AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+  CVSS note      : Readable configuration file whose variable names indicate credentials or keys (values redacted and not used).
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : The .env file is publicly readable and typically holds credentials and API keys.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      GET /.env -> HTTP 200; content signature matched. DB_PASSWORD=<redacted>
+      APP_KEY=<redacted>
+      DEBUG=<redacted>
+  Remediation    : Remove the file from the web root, deny access in the web-server configuration and rotate any credentials it contained.
+  False positives: Signature matched file content. Confirm manually that this is not an intentional public file or a honeypot.
+
+[HIGH] DOXA-005  Possible AWS access key ID in client-side code (app.js)
+  Classification : Potential vulnerability   Confidence: Medium
+  Affected URL   : http://127.0.0.1:18092/static/app.js
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : js / doxa-js   at 2026-11-17T11:52:44Z
+  Description    : 1 value(s) matching the pattern for AWS access key ID are present in JavaScript delivered to every visitor. DOXA did not use or validate the value.
+  Impact         : Credentials or tokens embedded in client-side code are readable by every visitor and may allow access to backend or third-party services if they are valid.
+  Evidence       :
+      AWS access key ID at byte offset 92 in app.js: 20 characters, sha256 prefix 457643f4 (value redacted)
+  Remediation    : Remove secrets from client-side code, rotate any value that was real, and keep credentials on the server side. For public client keys, restrict them (referrer, scope, quota).
+  False positives: Placeholders, public client-side identifiers (analytics or maps keys) and test fixtures often match these patterns. Verify manually whether the value is live and what it protects.
+
+[HIGH] DOXA-006  Possible Stripe live secret key in client-side code (app.js)
+  Classification : Potential vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/static/app.js
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : js / doxa-js   at 2026-11-17T11:52:44Z
+  Description    : 1 value(s) matching the pattern for Stripe live secret key are present in JavaScript delivered to every visitor. DOXA did not use or validate the value.
+  Impact         : Credentials or tokens embedded in client-side code are readable by every visitor and may allow access to backend or third-party services if they are valid.
+  Evidence       :
+      Stripe live secret key at byte offset 131 in app.js: 28 characters, sha256 prefix 7d450af6 (value redacted)
+  Remediation    : Remove secrets from client-side code, rotate any value that was real, and keep credentials on the server side. For public client keys, restrict them (referrer, scope, quota).
+  False positives: Placeholders, public client-side identifiers (analytics or maps keys) and test fixtures often match these patterns. Verify manually whether the value is live and what it protects.
+
+[MEDIUM] DOXA-007  Cookie without HttpOnly attribute
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : Cookies without HttpOnly can be read by JavaScript and stolen through XSS.
+  Impact         : Session cookies may be exposed to script access or sent over insecure channels, increasing the risk of session theft.
+  Evidence       :
+      Cookie names (values not stored): sid 
+  Remediation    : Set the HttpOnly attribute on cookies that JavaScript does not need.
+  False positives: Cookies used only for client-side preferences may legitimately omit HttpOnly.
+
+[MEDIUM] DOXA-008  Directory listing enabled
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/backup/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Directory index confirmed readable without authentication; sensitivity of the listed files was not assessed, so confidentiality impact is scored Low.
+  Module / tool  : http / curl   at 2026-11-17T11:52:44Z
+  Description    : The web server lists directory contents, exposing file names and potentially sensitive files.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      GET /backup/ -> HTTP 200; auto-index page detected: Index of /backup/
+  Remediation    : Disable directory indexing (Options -Indexes, autoindex off) and review exposed files.
+  False positives: Intentional public file mirrors may be listed on purpose.
+
+[MEDIUM] DOXA-009  HTTP Basic authentication offered over unencrypted HTTP
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/api/private
+  OWASP          : A02:2021 Cryptographic Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : api / curl   at 2026-11-17T11:52:45Z
+  Description    : The endpoint challenges with HTTP Basic authentication on a cleartext HTTP connection, so credentials would be sent unencrypted.
+  Impact         : Credentials may be exposed to network attackers or guessed more easily.
+  Evidence       :
+      GET /api/private -> HTTP 401, WWW-Authenticate: Basic
+  Remediation    : Serve the API over HTTPS only and prefer token-based authentication.
+  False positives: Acceptable only on isolated lab networks.
+
+[MEDIUM] DOXA-010  Possible Hard-coded credential assignment in client-side code (app.js)
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:18092/static/app.js
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : js / doxa-js   at 2026-11-17T11:52:44Z
+  Description    : 1 value(s) matching the pattern for Hard-coded credential assignment are present in JavaScript delivered to every visitor. DOXA did not use or validate the value.
+  Impact         : Credentials or tokens embedded in client-side code are readable by every visitor and may allow access to backend or third-party services if they are valid.
+  Evidence       :
+      Hard-coded credential assignment at byte offset 176 in app.js: 27 characters, sha256 prefix a7ca940e (value redacted)
+  Remediation    : Remove secrets from client-side code, rotate any value that was real, and keep credentials on the server side. For public client keys, restrict them (referrer, scope, quota).
+  False positives: Placeholders, public client-side identifiers (analytics or maps keys) and test fixtures often match these patterns. Verify manually whether the value is live and what it protects.
+
+[MEDIUM] DOXA-011  Potential DOM-based XSS pattern: user-controllable sources and unsafe sinks (app.js)
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:18092/static/app.js
+  OWASP          : A03:2021 Injection
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : js / doxa-js   at 2026-11-17T11:52:45Z
+  Description    : The script reads user-controllable values (location.hash ) and also uses unsafe DOM or code-evaluation sinks. DOXA did not trace the data flow, so this is an indicator only.
+  Impact         : Unsafe DOM and code-evaluation patterns can turn attacker-controlled input into script execution (XSS) if the data flow is reachable. Manual review is required.
+  Evidence       :
+      document.write(): 1 occurrence(s), first byte offsets: 674 
+      innerHTML/outerHTML assignment: 1 occurrence(s), first byte offsets: 730 
+      Sources present: location.hash 
+  Remediation    : Review the flagged locations. Avoid innerHTML/document.write/eval with untrusted data; use textContent or a sanitiser and add a Content-Security-Policy.
+  False positives: Sources and sinks in one file are often unrelated. Confirm that attacker-controlled data actually reaches the sink.
+
+[MEDIUM] DOXA-012  Potentially sensitive API endpoint reachable without authentication: /api/admin/config
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:18092/api/admin/config
+  OWASP          : A01:2021 Broken Access Control
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : api / doxa-api   at 2026-11-17T11:52:46Z
+  Description    : An endpoint whose name suggests sensitive data returned a JSON response to an unauthenticated GET request. DOXA recorded field names only and did not store any data.
+  Impact         : Data or functions may be reachable without authentication. Object-level authorization cannot be assessed without credentials and needs manual testing.
+  Evidence       :
+      GET /api/admin/config -> HTTP 200, application/json, 54 bytes; field names: dbHost debug secretName 
+  Remediation    : Require authentication and enforce object-level authorization on the server for every non-public endpoint.
+  False positives: The data may be intentionally public (catalogues, status pages). Verify what the endpoint returns and who should see it.
+
+[MEDIUM] DOXA-013  Potentially sensitive API endpoint reachable without authentication: /api/users
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:18092/api/users
+  OWASP          : A01:2021 Broken Access Control
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : api / doxa-api   at 2026-11-17T11:52:46Z
+  Description    : An endpoint whose name suggests sensitive data returned a JSON response to an unauthenticated GET request. DOXA recorded field names only and did not store any data.
+  Impact         : Data or functions may be reachable without authentication. Object-level authorization cannot be assessed without credentials and needs manual testing.
+  Evidence       :
+      GET /api/users -> HTTP 200, application/json, 48 bytes; field names: email id role 
+  Remediation    : Require authentication and enforce object-level authorization on the server for every non-public endpoint.
+  False positives: The data may be intentionally public (catalogues, status pages). Verify what the endpoint returns and who should see it.
+
+[MEDIUM] DOXA-014  Site served only over unencrypted HTTP
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A02:2021 Cryptographic Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : No HTTPS service was found; all traffic, including any credentials, is sent in cleartext.
+  Impact         : Traffic may be intercepted or modified in transit, exposing credentials and user data.
+  Evidence       :
+      GET http://127.0.0.1:18092/ -> HTTP 200
+  Remediation    : Deploy a valid TLS certificate, enable HTTPS and redirect HTTP to HTTPS.
+  False positives: Local lab targets commonly use plain HTTP.
+
+[MEDIUM] DOXA-015  Verbose error or stack trace disclosed by API (/api)
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/api/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Internal paths and framework details confirmed in an unauthenticated error response; no data records were exposed.
+  Module / tool  : api / curl   at 2026-11-17T11:52:46Z
+  Description    : A request for a non-existent resource returned an error that contains stack-trace or framework internals.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      GET /api/<random> -> HTTP 404; stack-trace signature matched (at Layer.handle (/app/node_modules/expre...)
+  Remediation    : Return generic error messages in production and log details server-side.
+  False positives: Development builds commonly enable verbose errors.
+
+[MEDIUM] DOXA-016  Verbose error or stack trace disclosed by API (/rest)
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/rest/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Internal paths and framework details confirmed in an unauthenticated error response; no data records were exposed.
+  Module / tool  : api / curl   at 2026-11-17T11:52:46Z
+  Description    : A request for a non-existent resource returned an error that contains stack-trace or framework internals.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      GET /rest/<random> -> HTTP 404; stack-trace signature matched (at Layer.handle (/app/node_modules/expre...)
+  Remediation    : Return generic error messages in production and log details server-side.
+  False positives: Development builds commonly enable verbose errors.
+
+[MEDIUM] DOXA-017  phpinfo() page exposed
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/phpinfo.php
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Configuration or runtime information confirmed readable without authentication.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : phpinfo output discloses configuration, paths and environment details.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      GET /phpinfo.php -> HTTP 200; content signature matched. <html><title>phpinfo()</title><body>PHP Version 5.6.40</body></html>
+  Remediation    : Remove the file from the web root, deny access in the web-server configuration and rotate any credentials it contained.
+  False positives: Signature matched file content. Confirm manually that this is not an intentional public file or a honeypot.
+
+[LOW] DOXA-018  API documentation publicly exposed
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/swagger.json
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:44Z
+  Description    : Full API specification is public, mapping the attack surface.
+  Impact         : Sensitive configuration, source code or data may be disclosed to unauthenticated users, enabling follow-on attacks.
+  Evidence       :
+      GET /swagger.json -> HTTP 200; content signature matched. {"openapi":"3.0.0","info":{"title":"Lab API","version":"1"},
+      "paths":{"/api/users":{"get":{}},"/api/orders/{id}":{"get":{}},"/api/Challenges":{"get":{}}}}
+  Remediation    : Restrict API documentation to authenticated or internal users where appropriate.
+  False positives: Signature matched file content. Confirm manually that this is not an intentional public file or a honeypot.
+
+[LOW] DOXA-019  API responses lack X-Content-Type-Options
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/api
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : api / curl   at 2026-11-17T11:52:46Z
+  Description    : JSON responses are served without nosniff, allowing content-type sniffing in some browsers.
+  Impact         : API weaknesses can expose data or internals to unauthenticated clients and browsers.
+  Evidence       :
+      GET /api -> no X-Content-Type-Options header
+  Remediation    : Send X-Content-Type-Options: nosniff on all API responses.
+  False positives: Low risk when Content-Type is correct and responses are not rendered.
+
+[LOW] DOXA-020  Cookie without SameSite attribute
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : Without SameSite, cookies are sent on cross-site requests in older browsers, aiding CSRF.
+  Impact         : Session cookies may be exposed to script access or sent over insecure channels, increasing the risk of session theft.
+  Evidence       :
+      Cookie names (values not stored): sid 
+  Remediation    : Set SameSite=Lax or Strict (None only with Secure when required).
+  False positives: Modern browsers default to Lax, reducing the practical risk.
+
+[LOW] DOXA-021  GraphQL introspection enabled
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/graphql
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : api / curl   at 2026-11-17T11:52:45Z
+  Description    : Introspection returns the full schema to unauthenticated clients, revealing types, fields and operations.
+  Impact         : API weaknesses can expose data or internals to unauthenticated clients and browsers.
+  Evidence       :
+      Introspection query answered with HTTP 200 (schema data not stored)
+  Remediation    : Disable introspection in production or restrict it to authenticated developers.
+  False positives: Intentional for public GraphQL APIs.
+
+[LOW] DOXA-022  HTTP TRACE method enabled
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : TRACE echoes requests back, which can aid cross-site tracing attacks.
+  Impact         : Weak configuration may expose unnecessary functionality or information.
+  Evidence       :
+      TRACE / -> HTTP 200 and the probe header was echoed
+  Remediation    : Disable TRACE (e.g. TraceEnable off).
+
+[LOW] DOXA-023  JavaScript source map publicly accessible
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/static/app.js.map
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS 3.1       : 5.3 (Medium)  AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+  CVSS note      : Source map readable without authentication; the sensitivity of the embedded source was not assessed, so confidentiality impact is scored Low.
+  Module / tool  : js / curl   at 2026-11-17T11:52:45Z
+  Description    : A source map is downloadable, allowing the original (unminified) application source to be reconstructed.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      GET /static/app.js.map -> HTTP 200; JSON source map header present
+  Remediation    : Do not deploy source maps to production, or restrict them to authenticated developers.
+  False positives: Intentional for open-source front ends.
+
+[LOW] DOXA-024  Missing Content-Security-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : No CSP is set, so the browser has no policy limiting where scripts and other resources may load from, reducing defence against XSS.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Server: LabServer/1.2.3 
+      Date: Tue, 17 Nov 2026 11:52:42 GMT
+      Content-Type: text/html
+      Content-Length: 499
+      Connection: close
+      Set-Cookie: sid=<redacted>; Path=/
+      Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+      X-Powered-By: PHP/5.6.40
+  Remediation    : Define a restrictive Content-Security-Policy (avoid unsafe-inline/unsafe-eval).
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[LOW] DOXA-025  Missing X-Content-Type-Options header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : Without nosniff, browsers may MIME-sniff responses, enabling content-type confusion attacks.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Server: LabServer/1.2.3 
+      Date: Tue, 17 Nov 2026 11:52:42 GMT
+      Content-Type: text/html
+      Content-Length: 499
+      Connection: close
+      Set-Cookie: sid=<redacted>; Path=/
+      Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+      X-Powered-By: PHP/5.6.40
+  Remediation    : Send X-Content-Type-Options: nosniff on all responses.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[LOW] DOXA-026  Missing clickjacking protection (X-Frame-Options / frame-ancestors)
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : The page can be embedded in third-party frames, enabling clickjacking.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Server: LabServer/1.2.3 
+      Date: Tue, 17 Nov 2026 11:52:42 GMT
+      Content-Type: text/html
+      Content-Length: 499
+      Connection: close
+      Set-Cookie: sid=<redacted>; Path=/
+      Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+      X-Powered-By: PHP/5.6.40
+  Remediation    : Send X-Frame-Options: DENY (or SAMEORIGIN) or a CSP frame-ancestors directive.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[LOW] DOXA-027  OpenAPI document declares no authentication scheme
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:18092/swagger.json
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : api / doxa-api   at 2026-11-17T11:52:45Z
+  Description    : The API description contains no security scheme, which may indicate that endpoints are intended to be open or that authentication is undocumented.
+  Impact         : Credentials may be exposed to network attackers or guessed more easily.
+  Evidence       :
+      3 documented path(s); no securitySchemes/securityDefinitions/security entries found
+  Remediation    : Document and enforce authentication for every non-public operation.
+  False positives: Authentication may be enforced by a gateway without being described in the document.
+
+[LOW] DOXA-028  Possible Google API key in client-side code (app.js)
+  Classification : Potential vulnerability   Confidence: Medium
+  Affected URL   : http://127.0.0.1:18092/static/app.js
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : js / doxa-js   at 2026-11-17T11:52:44Z
+  Description    : 1 value(s) matching the pattern for Google API key are present in JavaScript delivered to every visitor. DOXA did not use or validate the value.
+  Impact         : Credentials or tokens embedded in client-side code are readable by every visitor and may allow access to backend or third-party services if they are valid.
+  Evidence       :
+      Google API key at byte offset 331 in app.js: 39 characters, sha256 prefix 5e8a6a8b (value redacted)
+  Remediation    : Remove secrets from client-side code, rotate any value that was real, and keep credentials on the server side. For public client keys, restrict them (referrer, scope, quota).
+  False positives: Placeholders, public client-side identifiers (analytics or maps keys) and test fixtures often match these patterns. Verify manually whether the value is live and what it protects.
+
+[LOW] DOXA-029  Possible JSON Web Token in client-side code (app.js)
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:18092/static/app.js
+  OWASP          : A07:2021 Identification and Authentication Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : js / doxa-js   at 2026-11-17T11:52:44Z
+  Description    : 1 value(s) matching the pattern for JSON Web Token are present in JavaScript delivered to every visitor. DOXA did not use or validate the value.
+  Impact         : Credentials or tokens embedded in client-side code are readable by every visitor and may allow access to backend or third-party services if they are valid.
+  Evidence       :
+      JSON Web Token at byte offset 249 in app.js: 65 characters, sha256 prefix ff330437 (value redacted)
+  Remediation    : Remove secrets from client-side code, rotate any value that was real, and keep credentials on the server side. For public client keys, restrict them (referrer, scope, quota).
+  False positives: Placeholders, public client-side identifiers (analytics or maps keys) and test fixtures often match these patterns. Verify manually whether the value is live and what it protects.
+
+[LOW] DOXA-030  Potentially dangerous HTTP methods advertised
+  Classification : Potential vulnerability   Confidence: Low
+  Affected URL   : http://127.0.0.1:18092
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : The Allow header lists state-changing methods. DOXA did not test them (would modify data).
+  Impact         : Weak configuration may expose unnecessary functionality or information.
+  Evidence       :
+      Allow: GET, HEAD, OPTIONS, PUT, DELETE
+  Remediation    : Disable unused HTTP methods and require authentication for write methods.
+  False positives: Advertised methods may still require authentication.
+
+[LOW] DOXA-031  Third-party scripts loaded without Subresource Integrity
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A08:2021 Software and Data Integrity Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : js / doxa-js   at 2026-11-17T11:52:45Z
+  Description    : Cross-origin script tags have no integrity attribute, so a compromised host could change the code your visitors run.
+  Impact         : A compromised third-party script host could run arbitrary code in your users browsers.
+  Evidence       :
+      http://cdn.example.org/mixed.js
+      https://cdn.example.org/lib.js
+  Remediation    : Add integrity and crossorigin attributes to third-party script tags, or self-host the files.
+  False positives: SRI is impractical for scripts that legitimately change often (tag managers).
+
+[LOW] DOXA-032  Version information disclosed in server header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : The server header discloses software and version details that help attackers select exploits.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      Server: LabServer/1.2.3 
+  Remediation    : Remove or genericise version banners (e.g. ServerTokens Prod, server_tokens off, expose_php=Off).
+  False positives: Disclosure alone is not exploitable; it only reduces attacker effort.
+
+[LOW] DOXA-033  Version information disclosed in x-powered-by header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : The x-powered-by header discloses software and version details that help attackers select exploits.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      X-Powered-By: PHP/5.6.40
+  Remediation    : Remove or genericise version banners (e.g. ServerTokens Prod, server_tokens off, expose_php=Off).
+  False positives: Disclosure alone is not exploitable; it only reduces attacker effort.
+
+[LOW] DOXA-034  robots.txt references sensitive-looking paths
+  Classification : Potential vulnerability   Confidence: Medium
+  Affected URL   : http://127.0.0.1:18092/robots.txt
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-17T11:52:42Z
+  Description    : robots.txt is public and lists paths that suggest administrative, backup or internal content, which helps attackers prioritise targets.
+  Impact         : Technical details help attackers choose and tune attacks against the system.
+  Evidence       :
+      Disallow: /admin/
+      Disallow: /backup/
+  Remediation    : Do not rely on robots.txt to hide content; protect sensitive paths with authentication and remove revealing entries.
+  False positives: Paths may be harmless or decoys. Verify whether the listed resources are actually reachable.
+
+[INFORMATIONAL] DOXA-035  API endpoints and routes referenced in JavaScript (7)
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : js / doxa-js   at 2026-11-17T11:52:45Z
+  Description    : Client-side code references 7 endpoint or route string(s). They widen the known attack surface and are used by the api module.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      /api/Challenges
+      /api/admin/config
+      /api/private
+      /api/users/{id}
+      /rest/products/search?q=
+      /rest/user/login
+      /search?q=test
+  Remediation    : Ensure every referenced endpoint enforces authentication and authorization on the server side.
+  False positives: Strings may be dead code, examples or paths that do not exist.
+
+[INFORMATIONAL] DOXA-036  API endpoints discovered (7 reachable without credentials, 1 protected)
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:18092
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : api / doxa-api   at 2026-11-17T11:52:46Z
+  Description    : GET probes of common, JavaScript-referenced and documented API paths. Details are listed in logs/api_endpoints.txt.
+  Impact         : API weaknesses can expose data or internals to unauthenticated clients and browsers.
+  Evidence       :
+      200 /api application/json
+      200 /api/ application/json
+      200 /swagger.json application/json
+      200 /api/Challenges application/json
+      200 /api/admin/config application/json
+      401 /api/private application/json
+      200 /rest/products/search application/json
+      200 /api/users application/json
+  Remediation    : Confirm that every reachable endpoint is meant to be public.
+  False positives: Only GET requests without credentials were sent.
+
+[INFORMATIONAL] DOXA-037  GraphQL endpoint reachable without authentication
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/graphql
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : api / curl   at 2026-11-17T11:52:45Z
+  Description    : A GraphQL endpoint answers an unauthenticated read-only query.
+  Impact         : API weaknesses can expose data or internals to unauthenticated clients and browsers.
+  Evidence       :
+      GET /graphql?query={__typename} -> HTTP 200
+  Remediation    : Require authentication for the GraphQL endpoint unless it is intentionally public.
+
+[INFORMATIONAL] DOXA-038  Missing Permissions-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : Browser features (camera, geolocation, etc.) are not explicitly restricted.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Server: LabServer/1.2.3 
+      Date: Tue, 17 Nov 2026 11:52:42 GMT
+      Content-Type: text/html
+      Content-Length: 499
+      Connection: close
+      Set-Cookie: sid=<redacted>; Path=/
+      Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+      X-Powered-By: PHP/5.6.40
+  Remediation    : Send a Permissions-Policy header disabling unused features.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[INFORMATIONAL] DOXA-039  Missing Referrer-Policy header
+  Classification : Confirmed vulnerability   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : http / curl   at 2026-11-17T11:52:43Z
+  Description    : Full URLs may leak to other sites via the Referer header.
+  Impact         : Browsers are not instructed to apply defence-in-depth protections, which makes exploitation of other flaws (XSS, clickjacking, downgrade attacks) easier.
+  Evidence       :
+      HTTP/1.1 200 OK
+      Server: LabServer/1.2.3 
+      Date: Tue, 17 Nov 2026 11:52:42 GMT
+      Content-Type: text/html
+      Content-Length: 499
+      Connection: close
+      Set-Cookie: sid=<redacted>; Path=/
+      Set-Cookie: pref=<redacted>; Path=/; HttpOnly; Secure; SameSite=Lax
+      X-Powered-By: PHP/5.6.40
+  Remediation    : Send Referrer-Policy: strict-origin-when-cross-origin or stricter.
+  False positives: Severity is context dependent; static or non-sensitive sites may accept this risk.
+
+[INFORMATIONAL] DOXA-040  Third-party script hosts referenced (not analysed: outside approved scope)
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/
+  OWASP          : A05:2021 Security Misconfiguration
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : js / doxa-js   at 2026-11-17T11:52:45Z
+  Description    : 3 script reference(s) point to other origins. DOXA did not request them because they are outside the approved scope.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      cdn.example.org
+  Remediation    : Inventory third-party scripts and review them separately (add --scope-host only with authorization).
+
+[INFORMATIONAL] DOXA-041  Web service identified
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:18092
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-17T11:52:43Z
+  Description    : HTTP(S) service reachable. Server: LabServer/1.2.3 . HTTP available: 1, HTTPS available: 0.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      Title: DOXA Lab; Resolved IPs: 127.0.0.1
+  Remediation    : No action required.
+
+[INFORMATIONAL] DOXA-042  http:// references in JavaScript (app.js)
+  Classification : Informational observation   Confidence: Medium
+  Affected URL   : http://127.0.0.1:18092/static/app.js
+  OWASP          : A02:2021 Cryptographic Failures
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : js / doxa-js   at 2026-11-17T11:52:45Z
+  Description    : The script references resources over plain HTTP. The site itself is served over HTTP, so this is recorded for context.
+  Impact         : Resources fetched over plain HTTP can be modified by a network attacker, undermining the security of the HTTPS page that loads them.
+  Evidence       :
+      Hosts referenced over http://: insecure.example.org 
+  Remediation    : Serve the site and all resources over HTTPS.
+
+[INFORMATIONAL] DOXA-043  sitemap.xml is publicly accessible
+  Classification : Informational observation   Confidence: High
+  Affected URL   : http://127.0.0.1:18092/sitemap.xml
+  OWASP          : Not mapped (informational)
+  CVSS           : not scored
+  CVSS note      : Not scored: no directly demonstrated impact, or insufficient evidence for a defensible CVSS vector.
+  Module / tool  : recon / curl   at 2026-11-17T11:52:43Z
+  Description    : A sitemap with 1 entries is published.
+  Impact         : No direct security impact; the observation provides context for the assessment.
+  Evidence       :
+      http://lab/a
+  Remediation    : No action required unless the sitemap exposes non-public URLs.
+
+7. MODULE AND TOOL EXECUTION
+------------------------------------------------------------------------------
+  recon      OK              1s  HTTP=1 HTTPS=0 server=LabServer/1.2.3 
+  nmap       SKIPPED         0s  required tool not installed: nmap
+  whatweb    SKIPPED         0s  required tool not installed: whatweb
+  http       OK              1s  18 findings
+  tls        SKIPPED         0s  no HTTPS endpoint detected
+  dns        SKIPPED         0s  required tool not installed: dig
+  js         OK              1s  2 script file(s) analysed, 3 external not fetched, 7 endpoint string(s)
+  api        OK              1s  30 path(s) probed: 7 open, 1 protected, 11 finding(s)
+  gobuster   SKIPPED         0s  required tool not installed: gobuster
+  nikto      SKIPPED         0s  required tool not installed: nikto
+  nuclei     SKIPPED         0s  required tool not installed: nuclei
+  params     SKIPPED         0s  not part of the 'standard' profile
+  evidence   SKIPPED         0s  no screenshot tool (install chromium); headers and page body archived
+
+  $ wkhtmltopdf --quiet --enable-local-file-access --page-size A4 /tmp/lab/ex2/127.0.0.1_18092_20261117_115242/report.html /tmp/lab/ex2/127.0.0.1_18092_20261117_115242/report.pdf   [exit 0, 0s]
+
+8. LIMITATIONS AND UNTESTED AREAS
+------------------------------------------------------------------------------
+  - Point-in-time, unauthenticated black-box assessment; authenticated areas, session handling after login and business logic were not tested.
+  - Automated scanners produce false positives and false negatives; every finding classified as Potential or Unverified requires manual validation.
+  - No exploitation, credential extraction, data modification, file upload, brute-force or denial-of-service testing was performed.
+  - Only approved hosts and ports were contacted; redirects to unapproved destinations were not followed.
+  - Wordlist-based discovery cannot prove absence of content; JavaScript-rendered routes and authenticated API endpoints were not enumerated.
+  - OWASP Top 10 mapping is indicative. It does not establish compliance or non-compliance with any standard.
+  - CVSS scores are provided only where the evidence supports a defensible vector; all other findings are intentionally not scored.
+  - Third-party JavaScript (3 reference(s)) was not fetched or analysed because it is outside the approved scope.
+  - API assessment used unauthenticated GET requests only; authorization (IDOR/BOLA), business logic and write operations were not tested.
+  - No screenshots were captured (no headless browser found).
+  - Module nmap skipped: required tool not installed: nmap
+  - Module whatweb skipped: required tool not installed: whatweb
+  - Module tls skipped: no HTTPS endpoint detected
+  - Module dns skipped: required tool not installed: dig
+  - Module gobuster skipped: required tool not installed: gobuster
+  - Module nikto skipped: required tool not installed: nikto
+  - Module nuclei skipped: required tool not installed: nuclei
+  - Module params skipped: not part of the 'standard' profile
+  - Module evidence skipped: no screenshot tool (install chromium); headers and page body archived
+
+9. EVIDENCE INTEGRITY (SHA-256)
+------------------------------------------------------------------------------
+  Artefact manifest: logs/evidence.sha256 (14 files); report files: logs/reports.sha256
+
+10. DISCOVERED ASSETS
+------------------------------------------------------------------------------
+  Subdomains (name | source | addresses): none
+  API endpoints (status | path | content type | bytes)
+    200 | /api | application/json | 33
+    200 | /api/ | application/json | 33
+    200 | /swagger.json | application/json | 154
+    200 | /api/Challenges | application/json | 43
+    200 | /api/admin/config | application/json | 54
+    401 | /api/private | application/json | 24
+    200 | /rest/products/search | application/json | 30
+    200 | /api/users | application/json | 48
+  JavaScript files analysed
+    http://127.0.0.1:18092/static/app.js | HTTP 200 | 790 bytes
+    http://127.0.0.1:18092/static/lib/jquery.min.js | HTTP 200 | 93 bytes, library bundle (pattern checks skipped)
+  Endpoints referenced in JavaScript
+    /api/Challenges
+    /api/admin/config
+    /api/private
+    /api/users/{id}
+    /rest/products/search?q=
+    /rest/user/login
+    /search?q=test
+
+11. COMPARISON WITH PREVIOUS SCAN
+------------------------------------------------------------------------------
+  Previous report : /tmp/lab/ex2/127.0.0.1_18092_20261117_115233
+  New: 0   Resolved: 0   Persistent: 43   Severity changed: 0   Not re-tested: 0
+  RESOLVED means the module that produced the finding ran successfully this time and no longer reports it; NOT_RETESTED means that module did not run OK.
+  PDF report: generated with wkhtmltopdf
+
+==============================================================================
+Confidential: contains security-sensitive information. Secrets are redacted.
+==============================================================================

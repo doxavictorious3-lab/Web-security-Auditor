@@ -53,6 +53,26 @@ generate_text_report() {
     report_limitations | sed 's/^/  - /'
     echo; echo "9. EVIDENCE INTEGRITY (SHA-256)"; echo "$dash"
     echo "  Artefact manifest: logs/evidence.sha256 ($(wc -l <"$LOG_DIR/evidence.sha256" 2>/dev/null | tr -d ' ') files); report files: logs/reports.sha256"
+    echo; echo "10. DISCOVERED ASSETS"; echo "$dash"
+    local f label
+    for f in "subdomains.txt:Subdomains (name | source | addresses)" "api_endpoints.txt:API endpoints (status | path | content type | bytes)" "js_files.txt:JavaScript files analysed" "js_endpoints.txt:Endpoints referenced in JavaScript"; do
+      label=${f#*:}; f=${f%%:*}
+      if [[ -s $LOG_DIR/$f ]]; then echo "  $label"; report_asset "$f" | head -60 | sed 's/^/    /'; else echo "  $label: none"; fi
+    done
+    echo; echo "11. COMPARISON WITH PREVIOUS SCAN"; echo "$dash"
+    if (( COMPARE_DONE )); then
+      echo "  Previous report : $COMPARE_DIR"
+      echo "  New: $CMP_NEW   Resolved: $CMP_RESOLVED   Persistent: $CMP_PERSISTENT   Severity changed: $CMP_CHANGED   Not re-tested: $CMP_NOTRETESTED"
+      local cst cid csev cprev ctitle curl cmod
+      while IFS=$'\t' read -r cst cid csev cprev ctitle curl cmod; do
+        [[ $cst == PERSISTENT ]] && continue
+        printf '  %-13s %-9s %-13s %s (%s)\n' "$cst" "$cid" "${csev/-/$cprev}" "$ctitle" "$curl"
+      done <"$CMP_FILE"
+      echo "  RESOLVED means the module that produced the finding ran successfully this time and no longer reports it; NOT_RETESTED means that module did not run OK."
+    else
+      echo "  Not performed${COMPARE_ERROR:+: $COMPARE_ERROR}"
+    fi
+    echo "  PDF report: ${PDF_STATUS:-not attempted}"
     echo; echo "$line"; echo "Confidential: contains security-sensitive information. Secrets are redacted."; echo "$line"
   } >"$R"
 }

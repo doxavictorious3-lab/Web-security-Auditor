@@ -14,7 +14,38 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 HOME = b"""<html><head><title>DOXA Lab</title><meta name="generator" content="LabCMS 1.0"></head>
-<body><h1>Lab</h1><a href="/item.php?id=1&amp;q=x">item</a> <a href="/search?q=test">search</a></body></html>"""
+<body><h1>Lab</h1><a href="/item.php?id=1&amp;q=x">item</a> <a href="/search?q=test">search</a>
+<script src="/static/app.js"></script>
+<script src="/static/lib/jquery.min.js"></script>
+<script src="https://cdn.example.org/lib.js"></script>
+<script src="https://cdn.example.org/sri.js" integrity="sha384-abc" crossorigin="anonymous"></script>
+<script src="http://cdn.example.org/mixed.js"></script>
+</body></html>"""
+
+APP_JS = b"""// lab application bundle (intentionally contains fake secrets for DOXA tests)
+const aws = "AKIAABCDEFGHIJKLMNOP";
+const stripe = "sk_live_abcdefghijklmnop1234";
+const cfg = { password: "S3cr3tPassw0rd!", apiKey: "YOUR_API_KEY_HERE" };
+const tok = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcdefghijklmnop";
+const gkey = "AIzaSyA1234567890abcdefghijklmnopqrstuv";
+fetch("/api/Challenges");
+fetch("/api/private");
+const adminCfg = "/api/admin/config";
+axios.get("/rest/products/search?q=");
+const loginUrl = "/rest/user/login";
+const templ = "/api/users/{id}";
+const assetPath = "/assets/logo.png";
+const t = "http://insecure.example.org/track.js";
+eval(userInput);
+document.write("<b>x</b>");
+document.getElementById("o").innerHTML = location.hash;
+//# sourceMappingURL=app.js.map
+"""
+
+JQUERY = b"/*! jQuery v1.12.4 */ function f(a){ return eval(a); } el.innerHTML = x; document.write('x');"
+
+SWAGGER = b"""{"openapi":"3.0.0","info":{"title":"Lab API","version":"1"},
+"paths":{"/api/users":{"get":{}},"/api/orders/{id}":{"get":{}},"/api/Challenges":{"get":{}}}}"""
 
 
 class Lab(BaseHTTPRequestHandler):
@@ -23,9 +54,17 @@ class Lab(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     requests_seen = []
     root_redirect = False
+    request_log = None
 
     def log_message(self, *a):  # quiet
         pass
+
+    def parse_request(self):
+        ok = super().parse_request()
+        if ok and Lab.request_log:
+            with open(Lab.request_log, "a") as fh:
+                fh.write("%s %s\n" % (self.command, self.path))
+        return ok
 
     def _send(self, code, body=b"", ctype="text/html", extra=None):
         self.send_response(code)
@@ -89,6 +128,36 @@ class Lab(BaseHTTPRequestHandler):
                 self._send(200, b"You have an error in your SQL syntax; check the manual near ''' at line 1")
             else:
                 self._send(200, b"<html>item " + ident.encode() + b"</html>")
+        elif p == "/static/app.js":
+            self._send(200, APP_JS, "application/javascript")
+        elif p == "/static/app.js.map":
+            self._send(200, b'{"version":3,"sources":["src/app.ts"],"mappings":"AAAA"}', "application/json")
+        elif p == "/static/lib/jquery.min.js":
+            self._send(200, JQUERY, "application/javascript")
+        elif p == "/api/" or p == "/api":
+            self._send(200, b'{"message":"Lab API","version":1}', "application/json")
+        elif p == "/api/users":
+            self._send(200, b'[{"id":1,"email":"admin@x.test","role":"admin"}]', "application/json")
+        elif p == "/api/admin/config":
+            self._send(200, b'{"debug":true,"secretName":"x","dbHost":"internal-db"}', "application/json")
+        elif p == "/api/Challenges":
+            self._send(200, b'{"status":"success","data":[{"name":"c1"}]}', "application/json")
+        elif p == "/rest/products/search":
+            self._send(200, b'{"status":"success","data":[]}', "application/json")
+        elif p == "/api/private":
+            self._send(401, b'{"error":"unauthorized"}', "application/json", extra=[("WWW-Authenticate", 'Basic realm="lab"')])
+        elif p == "/swagger.json":
+            self._send(200, SWAGGER, "application/json")
+        elif p == "/graphql":
+            qs = q.get("query", [""])[0]
+            if "__schema" in qs:
+                self._send(200, b'{"data":{"__schema":{"queryType":{"name":"Query"}}}}', "application/json")
+            elif "__typename" in qs:
+                self._send(200, b'{"data":{"__typename":"Query"}}', "application/json")
+            else:
+                self._send(400, b'{"errors":[{"message":"Must provide query string."}]}', "application/json")
+        elif p.startswith("/api/") or p.startswith("/rest/"):
+            self._send(404, b'{"error":"Not Found","stack":"Error: Not Found\\n    at Layer.handle (/app/node_modules/express/lib/router/layer.js:95:5)"}', "application/json")
         elif p == "/search":
             term = q.get("q", [""])[0]
             self._send(200, ("<html>results for " + term + "</html>").encode())
@@ -123,8 +192,10 @@ if __name__ == "__main__":
     ap.add_argument("--cert")
     ap.add_argument("--key")
     ap.add_argument("--root-redirect", action="store_true")
+    ap.add_argument("--request-log")
     a = ap.parse_args()
     Lab.root_redirect = a.root_redirect
+    Lab.request_log = a.request_log
     serve(a.http_port)
     if a.https_port:
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

@@ -1,4 +1,4 @@
-# DOXA Web Security Auditor v2.0.1 (Stage 1)
+# DOXA Web Security Auditor v2.1.0 (Stages 1 and 2)
 
 Scope-enforcing, evidence-first web application assessment and reporting framework for Kali Linux and Debian-based systems, written in Bash.
 
@@ -18,9 +18,12 @@ Philosophy: accuracy over the number of detected vulnerabilities, evidence over 
 | Findings: consistent schema, dedupe, redaction, OWASP Top 10 (2021) mapping, evidence-based CVSS v3.1 | Done, tested |
 | Reports: HTML dashboard, JSON, TXT, CSV, SHA-256 manifests | Done, tested |
 | Ported and hardened v1 modules: recon, http, tls, nmap, whatweb, gobuster, nikto, nuclei, params, evidence | Done. recon/http/tls/evidence are exercised by the test suite; the modules that wrap external scanners were hardened but have **not** been executed in the development sandbox (those tools are not installed there) |
-| Test suite (141 checks) | Done |
-| JavaScript analysis module, API assessment module, DNS/subdomain module | **Pending (Stage 2)** |
-| Previous-vs-current scan comparison, PDF export | **Pending (Stage 2)** |
+| Test suite (see Testing) | Done |
+| JavaScript analysis (`js`): script discovery, endpoints, redacted secret indicators, http:// references, SRI, source maps, dangerous patterns | Done, tested against the local lab |
+| API assessment (`api`): GET-only discovery, OpenAPI/Swagger, GraphQL introspection, CORS, unauthenticated-access indicators, verbose errors | Done, tested against the local lab |
+| DNS and subdomain module (`dns`): records, SPF/DMARC/CAA, wildcard detection, wordlist and certificate names, takeover indicators, approved AXFR | Done. Logic tested with a fake `dig` fixture; real `dig` and a live resolver were not available in the development sandbox |
+| Scan comparison (`--compare`), CSV/JSON/HTML/TXT comparison output | Done, tested |
+| PDF export (chromium, wkhtmltopdf or weasyprint) | Done. Rendering verified with wkhtmltopdf; the chromium path is tested with a stand-in, not a real browser |
 | Local Ollama AI analysis (`--ai`) | **Pending (Stage 3)** |
 
 ## Features
@@ -32,7 +35,11 @@ Philosophy: accuracy over the number of detected vulnerabilities, evidence over 
 - **CVSS honesty**: CVSS v3.1 is attached only where the evidence supports a vector (e.g. a readable `.env` whose variable names indicate credentials = 7.5; repository metadata only = 5.3). Hardening gaps and scanner observations are deliberately *not scored*. Scores are computed by a built-in implementation of the FIRST v3.1 formula and verified against reference vectors.
 - **Redaction**: cookie values, `Authorization` headers, bearer tokens, JWTs, cloud keys, passwords and private keys are masked before anything is stored; values from `.env`-style files are never recorded.
 - **Evidence integrity**: `logs/evidence.sha256` (raw artefacts) and `logs/reports.sha256` (reports and main log). Verify with `sha256sum -c`.
-- **Reports**: `report.html` (dark Matrix-green/cyan dashboard with executive summary, scope and authorization, methodology, technologies, ports, statistics, OWASP table, findings, remediation, tool status, limitations, integrity), `report.txt`, `findings.json`, `findings.csv` (formula-injection safe).
+- **JavaScript analysis (`js`)**: fetches only in-scope scripts that the page itself loads; third-party script hosts are listed but never requested. Secret *indicators* record type, location, length and a short hash, never the value. Library bundles (jQuery, React, ...) are skipped for pattern checks to avoid noise. Dangerous patterns (eval, innerHTML, ...) are flagged for manual verification and escalate to a "potential DOM XSS pattern" only when user-controllable sources and unsafe sinks occur in the same file.
+- **API assessment (`api`)**: active, GET-only, no credentials. Reports exposed OpenAPI/Swagger documents, GraphQL introspection, reflective CORS, verbose errors, Basic auth over HTTP, and *potentially* unauthenticated sensitive-looking endpoints (field names only, classified as potential, mapped to A01 as an indicator). IDOR/BOLA is out of reach without credentials and is listed as a limitation.
+- **DNS and subdomains (`dns`)**: record inspection, SPF/DMARC/CAA/nameserver checks, wildcard detection, certificate names, wordlist enumeration (skipped in passive mode) restricted to names under the approved host, and subdomain-takeover **indicators** (always "Potential vulnerability", never "Confirmed"; DOXA never tries to claim a resource). Zone-transfer attempts contact the authoritative nameservers and need approval. Third-party passive sources (subfinder) are opt-in with `--dns-passive-sources`.
+- **Scan comparison**: `--compare auto|DIR` matches findings by fingerprint and reports new, resolved, persistent and severity-changed findings. A finding only counts as *resolved* if the module that produced it ran successfully this time; otherwise it is *not re-tested*.
+- **Reports**: `report.html` (dark Matrix-green/cyan dashboard with executive summary, scope and authorization, methodology, technologies, ports, statistics, OWASP table, findings, remediation, tool status, limitations, integrity), `report.txt`, `findings.json`, `findings.csv` (formula-injection safe), `comparison.csv`, and `report.pdf` when chromium, wkhtmltopdf or weasyprint is installed.
 
 ## Architecture
 
@@ -42,9 +49,9 @@ config/settings.conf    defaults (parsed safely, never sourced)
 config/profiles.conf    passive / standard / full / custom profiles
 lib/                    logging, common (escaping, redaction, tool runner), validation,
                         scope (scope checks, HTTP client, rate limiter), findings (schema,
-                        OWASP map, CVSS), config, ui
-modules/                recon http tls nmap whatweb directories(gobuster) nikto nuclei params evidence
-reports/                common (sorting, stats, limitations), json (+csv), txt, html
+                        OWASP map, CVSS), config, compare, ui
+modules/                recon http tls dns javascript api nmap whatweb directories(gobuster) nikto nuclei params evidence
+reports/                common (sorting, stats, limitations), json (+csv), txt, html, pdf
 templates/report.html   HTML shell and CSS
 tests/                  run_tests.sh and lab_server.py (local intentionally weak server)
 install.sh              apt-based dependency installer (--dry-run supported)
@@ -75,6 +82,7 @@ See `DEPENDENCIES.md`. Only bash >= 4.4, curl and standard coreutils are strictl
 ./doxa.sh --target https://lab.local --ca-cert ./lab-ca.pem --scope-host api.lab.local --authorized
 ./doxa.sh --target "https://[::1]:8443" --mode custom --modules recon,http,tls --authorized
 ./doxa.sh --target http://10.10.10.5:8080 --mode full --rate 20 --threads 5 --skip nikto
+./doxa.sh --target http://127.0.0.1:3000 --mode standard --authorized --compare auto   # compare with the last scan
 ./doxa.sh                      # interactive menu
 ./doxa.sh --check-tools
 ```
@@ -94,6 +102,9 @@ See `DEPENDENCIES.md`. Only bash >= 4.4, curl and standard coreutils are strictl
 | `--authorized` | Confirm authorization non-interactively (otherwise you must type `I AUTHORIZE`) |
 | `--scope-host H` / `--scope-port P` | Approve additional hosts (`api.x.com`, `10.0.0.7`, `*.x.com`) or ports. Nmap is restricted to approved ports when you pass `--scope-port` |
 | `--ca-cert FILE` | Trust a lab CA |
+| `--compare SPEC` | Compare with a previous scan: a report directory or `auto` |
+| `--no-pdf` | Skip `report.pdf` |
+| `--dns-passive-sources` | Allow subfinder third-party sources (sends the domain name externally) |
 | `--insecure-tls-diagnostic` | Disable certificate verification (authorized diagnostics only) |
 | `--allow-dangerous` | Pre-approve checks that otherwise ask (parameter probing, nuclei default-login) |
 | `--oast` | Allow Nuclei out-of-band checks (contacts a third-party server) |
@@ -103,8 +114,8 @@ See `DEPENDENCIES.md`. Only bash >= 4.4, curl and standard coreutils are strictl
 
 | Profile | Modules | Notes |
 |---|---|---|
-| passive | recon whatweb http tls evidence | normal page requests only; no path guessing |
-| standard | + nmap gobuster nikto nuclei | safe Nikto tuning, Nuclei excludes intrusive/DoS/fuzz/brute-force/default-login |
+| passive | recon whatweb http tls dns js evidence | normal page requests only; no path guessing |
+| standard | + nmap api gobuster nikto nuclei | safe Nikto tuning, Nuclei excludes intrusive/DoS/fuzz/brute-force/default-login |
 | full | + params | deeper scans; parameter probing and default-login need approval |
 | custom | `--modules` | any subset |
 
@@ -128,9 +139,15 @@ A real example generated against the local lab is in `examples/local-lab-standar
 tests/run_tests.sh
 ```
 
-The suite starts `tests/lab_server.py` (127.0.0.1 only, intentionally misconfigured, with an HTTP and a self-signed HTTPS listener) and checks: invalid target input, URL/IPv4/IPv6 parsing, scope enforcement, redirect handling (off-host, off-port, loops, limits), TLS verification (rejected by default, `--ca-cert`, diagnostic override), rate limiting, missing dependencies, module failure/timeout/skip recording, interrupted scans (SIGINT, partial report), finding normalization, dedupe, redaction and CVSS, JSON validity, HTML escaping and structure, CSV injection safety, hash manifests, and end-to-end scans. Nothing outside loopback is contacted. The AI failure-handling test is pending with the AI module.
+The suite (221 checks) starts `tests/lab_server.py` (127.0.0.1 only, intentionally misconfigured, with an HTTP and a self-signed HTTPS listener) and checks: invalid target input, URL/IPv4/IPv6 parsing, scope enforcement, redirect handling (off-host, off-port, loops, limits), TLS verification (rejected by default, `--ca-cert`, diagnostic override), rate limiting, missing dependencies, module failure/timeout/skip recording, interrupted scans (SIGINT, partial report), finding normalization, dedupe, redaction and CVSS, JSON validity, HTML escaping and structure, CSV injection safety, hash manifests, and end-to-end scans. Nothing outside loopback is contacted. The AI failure-handling test is pending with the AI module.
 
 For realistic lab practice use DVWA or OWASP Juice Shop locally (see the v1 README for `docker run` examples) and always add `--authorized` only for targets you control.
+
+## Scope notes for the new modules
+
+- `js`, `api` and `dns` follow the same scope rules as everything else. DNS lookups for the approved host and names beneath it go to your resolver; DOXA does not send web requests to discovered subdomains unless you approve them with `--scope-host`.
+- Looking up a CNAME target for takeover checks is a DNS query for that name only.
+- `api` probes up to 60 paths per scan and sends only GET requests.
 
 ## Known limitations
 
@@ -142,4 +159,3 @@ For realistic lab practice use DVWA or OWASP Juice Shop locally (see the v1 READ
 ## License
 
 MIT (see `LICENSE`) with an authorized-use notice.
-# Web-security-Auditor

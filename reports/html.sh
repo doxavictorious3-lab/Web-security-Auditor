@@ -8,7 +8,7 @@ _html_section_summary() {
   local B=$1 s st i=0 id fp sev title url cat status conf module tool ts owasp cs cv cj desc impact ev rem fpn
   {
     printf '<nav>'
-    for s in summary scope methodology tech ports stats owasp findings remediation tools limits integrity; do printf '<a href="#%s">%s</a>' "$s" "$s"; done
+    for s in summary scope methodology tech ports stats owasp findings remediation tools limits integrity assets compare; do printf '<a href="#%s">%s</a>' "$s" "$s"; done
     printf '</nav>\n<section id="summary"><h2>1. Executive summary</h2>\n'
     printf '<p>An automated, non-destructive assessment of <code>%s</code> was performed in <b>%s</b> mode. DOXA recorded <b>%s</b> finding(s) after de-duplication. ' \
       "$(_h "$TARGET_URL")" "$(_h "$MODE")" "$TOTAL"
@@ -168,12 +168,39 @@ _html_section_tail() {
   } >>"$B"
 }
 
+_html_section_assets_compare() {
+  local B=$1 f label n cst cid csev cprev ctitle curl cmod
+  {
+    printf '<section id="assets"><h2>14. Discovered assets</h2>'
+    for f in "subdomains.txt:Subdomains (name | source | addresses)" "api_endpoints.txt:API endpoints (status | path | content type | bytes)" "js_files.txt:JavaScript files analysed" "js_endpoints.txt:Endpoints referenced in JavaScript"; do
+      label=${f#*:}; f=${f%%:*}
+      printf '<h4>%s</h4>' "$(_h "$label")"
+      if [[ -s $LOG_DIR/$f ]]; then printf '<pre>%s</pre>' "$(_h "$(report_asset "$f" | head -80)")"; else printf '<p class="note">None found or module not run.</p>'; fi
+    done
+    printf '</section>\n<section id="compare"><h2>15. Comparison with previous scan</h2>'
+    if (( COMPARE_DONE )); then
+      printf '<p>Previous report: <code>%s</code></p><div class="cards"><div class="card"><b>%s</b>New</div><div class="card"><b>%s</b>Resolved</div><div class="card"><b>%s</b>Persistent</div><div class="card"><b>%s</b>Severity changed</div><div class="card"><b>%s</b>Not re-tested</div></div>' \
+        "$(_h "$COMPARE_DIR")" "$CMP_NEW" "$CMP_RESOLVED" "$CMP_PERSISTENT" "$CMP_CHANGED" "$CMP_NOTRETESTED"
+      printf '<table class="grid"><tr><th>Status</th><th>ID</th><th>Severity</th><th>Finding</th><th>URL</th></tr>'
+      while IFS=$'\t' read -r cst cid csev cprev ctitle curl cmod; do
+        [[ $cst == PERSISTENT ]] && continue
+        n=$csev; [[ $csev == - ]] && n=$cprev; [[ $cst == CHANGED ]] && n="$cprev -> $csev"
+        printf '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' "$(_h "$cst")" "$(_h "$cid")" "$(_h "$n")" "$(_h "$ctitle")" "$(_h "$curl")"
+      done <"$CMP_FILE"
+      printf '</table><p class="note">Resolved = the module that produced the finding ran successfully this time and no longer reports it. Not re-tested = that module did not run OK, so the finding cannot be called resolved. Persistent findings are not listed.</p>'
+    else
+      printf '<p>No comparison was performed%s.</p>' "$( [[ -n ${COMPARE_ERROR:-} ]] && printf ': %s' "$(_h "$COMPARE_ERROR")" )"
+    fi
+    printf '</section>\n'
+  } >>"$B"
+}
+
 generate_html_report() {
   local B="$TMPD/report.body" H="$OUTDIR/report.html" tpl="$DOXA_HOME/templates/report.html"
   [[ -r $tpl ]] || { err "report template missing: $tpl"; return 1; }
   : >"$B"
   _html_section_summary "$B"; _html_section_scope "$B"; _html_section_method "$B"
-  _html_section_stats "$B"; _html_section_findings "$B"; _html_section_tail "$B"
+  _html_section_stats "$B"; _html_section_findings "$B"; _html_section_tail "$B"; _html_section_assets_compare "$B"
   awk -v target="$(_h "$TARGET_URL")" -v ver="$DOXA_VERSION" -v bodyf="$B" '
     /@@BODY@@/ { while ((getline l < bodyf) > 0) print l; close(bodyf); next }
     { i = index($0, "@@TARGET@@"); if (i) $0 = substr($0, 1, i - 1) target substr($0, i + 10)
